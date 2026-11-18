@@ -335,7 +335,7 @@ test('Command registration rejects aliases containing spaces', () => {
   }, /Invalid command alias/);
 });
 test('Command registration rejects duplicate aliases within the same command', () => {
-  const engine = createNexaBot();
+  const engine = createEngine();
 
   assert.throws(
     () => engine.register({
