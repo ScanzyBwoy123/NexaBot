@@ -38,9 +38,20 @@ const name = command.name.toLowerCase();
       throw new Error(`Invalid permission for ${name}.`);
     }
 
-    const names = [name, ...(command.aliases || [])]
-      .map(value => String(value).toLowerCase());
+    const aliases = command.aliases || [];
 
+if (
+  !Array.isArray(aliases) ||
+  aliases.some(alias =>
+    typeof alias !== 'string' ||
+    !/^[a-z0-9][a-z0-9_-]*$/i.test(alias)
+  )
+) {
+  throw new Error('Invalid command alias.');
+}
+
+const names = [name, ...aliases]
+  .map(value => value.toLowerCase());
     for (const item of names) {
       if (this.commands.has(item)) {
         throw new Error(`Duplicate command or alias: ${item}`);
