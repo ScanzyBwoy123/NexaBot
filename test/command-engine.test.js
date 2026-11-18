@@ -487,3 +487,22 @@ test('Command registration rejects duplicate names regardless of case', () => {
     /Duplicate command or alias/
   );
 });
+test('Command registration rejects duplicate aliases regardless of case', () => {
+  const engine = createEngine();
+
+  engine.register({
+    name: 'first',
+    aliases: ['hello'],
+    permission: 'public',
+    execute: async () => 'First'
+  });
+
+  assert.throws(
+    () => engine.register({
+      name: 'HELLO',
+      permission: 'public',
+      execute: async () => 'Second'
+    }),
+    /Duplicate command or alias/
+  );
+});
