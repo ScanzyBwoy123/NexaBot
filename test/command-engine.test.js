@@ -434,3 +434,38 @@ test('Command registration accepts zero cooldown values', () => {
     }]
   }));
 });
+test('Failed commands do not trigger cooldowns', async () => {
+  let executions = 0;
+
+  const engine = new CommandEngine({
+    prefix: '.',
+    logger: { error: () => {} }
+  });
+
+  engine.register({
+    name: 'retry',
+    permission: 'public',
+    cooldownMs: 5000,
+    execute: async () => {
+      executions++;
+
+      if (executions === 1) {
+        throw new Error('Temporary failure');
+      }
+
+      return 'Success';
+    }
+  });
+
+  const context = {
+    text: '.retry',
+    senderId: '233501234567'
+  };
+
+  const first = await engine.handle(context);
+  const second = await engine.handle(context);
+
+  assert.equal(first.code, 'COMMAND_ERROR');
+  assert.equal(second.ok, true);
+  assert.equal(executions, 2);
+});
