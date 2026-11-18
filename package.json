@@ -1,0 +1,9 @@
+{
+  "name": "nexabot-command-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Command-first foundation for NexaBot",
+  "main": "src/index.js",
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=20" }
+}
