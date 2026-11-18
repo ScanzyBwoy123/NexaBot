@@ -289,3 +289,14 @@ test('Duplicate aliases cannot overwrite existing commands', () => {
     });
   }, /Duplicate command or alias/);
 });
+test('Command registration rejects invalid command names', () => {
+  const engine = createEngine();
+
+  assert.throws(() => {
+    engine.register({
+      name: '',
+      permission: 'public',
+      execute: async () => 'Invalid'
+    });
+  }, /Invalid command registration/);
+});
