@@ -165,3 +165,60 @@ test('Command cooldown blocks repeated execution', async () => {
   assert.equal(third.ok, true);
   assert.equal(executions, 2);
 });
+test('Owner commands reject missing sender IDs', async () => {
+  const engine = createEngine();
+
+  const result = await engine.handle({
+    text: '.settings'
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'OWNER_ONLY');
+});
+
+test('Admin commands reject ordinary group members', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    isGroupAdmin: async () => false
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'admincmd',
+    permission: 'admin',
+    execute: async () => {
+      executions++;
+      return 'Allowed';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.admincmd',
+    senderId: '233501234567'
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'ADMIN_ONLY');
+  assert.equal(executions, 0);
+});
+
+test('Verified group admins can execute admin commands', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    isGroupAdmin: async () => true
+  });
+
+  engine.register({
+    name: 'admincmd',
+    permission: 'admin',
+    execute: async () => 'Admin access granted'
+  });
+
+  const result = await engine.handle({
+    text: '.admincmd',
+    senderId: '233501234567'
+  });
+
+  assert.equal(result.ok, true);
+});
