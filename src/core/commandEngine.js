@@ -52,6 +52,10 @@ if (
 
 const names = [name, ...aliases]
   .map(value => value.toLowerCase());
+
+if (new Set(names).size !== names.length) {
+  throw new Error('Duplicate command or alias.');
+}
     for (const item of names) {
       if (this.commands.has(item)) {
         throw new Error(`Duplicate command or alias: ${item}`);
