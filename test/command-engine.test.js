@@ -469,3 +469,21 @@ test('Failed commands do not trigger cooldowns', async () => {
   assert.equal(second.ok, true);
   assert.equal(executions, 2);
 });
+test('Command registration rejects duplicate names regardless of case', () => {
+  const engine = createEngine();
+
+  engine.register({
+    name: 'greeting',
+    permission: 'public',
+    execute: async () => 'First'
+  });
+
+  assert.throws(
+    () => engine.register({
+      name: 'GREETING',
+      permission: 'public',
+      execute: async () => 'Second'
+    }),
+    /Duplicate command or alias/
+  );
+});
