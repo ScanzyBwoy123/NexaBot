@@ -311,3 +311,14 @@ test('Command registration rejects invalid permission levels', () => {
     });
   }, /Invalid permission/);
 });
+test('Command registration rejects names containing spaces', () => {
+  const engine = createEngine();
+
+  assert.throws(() => {
+    engine.register({
+      name: 'bad name',
+      permission: 'public',
+      execute: async () => 'Invalid'
+    });
+  }, /Invalid command name/);
+});
