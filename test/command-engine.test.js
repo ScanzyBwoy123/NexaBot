@@ -300,3 +300,14 @@ test('Command registration rejects invalid command names', () => {
     });
   }, /Invalid command registration/);
 });
+test('Command registration rejects invalid permission levels', () => {
+  const engine = createEngine();
+
+  assert.throws(() => {
+    engine.register({
+      name: 'dangerous',
+      permission: 'everyone',
+      execute: async () => 'Executed'
+    });
+  }, /Invalid permission/);
+});
