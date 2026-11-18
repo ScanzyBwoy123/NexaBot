@@ -25,7 +25,14 @@ this.now = options.now || Date.now;
       throw new Error('Invalid command registration.');
     }
 
-    const name = command.name.toLowerCase();
+    if (
+  typeof command.name !== 'string' ||
+  !/^[a-z0-9][a-z0-9_-]*$/i.test(command.name)
+) {
+  throw new Error('Invalid command name.');
+}
+
+const name = command.name.toLowerCase();
 
     if (!['public', 'owner', 'admin'].includes(command.permission)) {
       throw new Error(`Invalid permission for ${name}.`);
