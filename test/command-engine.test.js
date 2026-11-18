@@ -277,3 +277,15 @@ test('Aliases cannot bypass owner-only permissions', async () => {
   assert.equal(result.code, 'OWNER_ONLY');
   assert.equal(executions, 0);
 });
+test('Duplicate aliases cannot overwrite existing commands', () => {
+  const engine = createEngine();
+
+  assert.throws(() => {
+    engine.register({
+      name: 'anothercommand',
+      aliases: ['ping'],
+      permission: 'public',
+      execute: async () => 'Hijacked!'
+    });
+  }, /Duplicate command or alias/);
+});
