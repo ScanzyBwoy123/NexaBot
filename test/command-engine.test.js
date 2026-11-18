@@ -322,3 +322,15 @@ test('Command registration rejects names containing spaces', () => {
     });
   }, /Invalid command name/);
 });
+test('Command registration rejects aliases containing spaces', () => {
+  const engine = createEngine();
+
+  assert.throws(() => {
+    engine.register({
+      name: 'greet',
+      aliases: ['bad alias'],
+      permission: 'public',
+      execute: async () => 'Hello'
+    });
+  }, /Invalid command alias/);
+});
