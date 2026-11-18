@@ -122,9 +122,10 @@ this.now = options.now || Date.now;
     }
         const cooldownMs = command.cooldownMs || 0;
     const cooldownKey = `${sender}:${command.name}`;
-    const lastUsed = this.cooldowns.get(cooldownKey) || 0;
-    const remaining = cooldownMs - (this.now() - lastUsed);
-
+    const lastUsed = this.cooldowns.get(cooldownKey);
+const remaining = lastUsed === undefined
+  ? 0
+  : cooldownMs - (this.now() - lastUsed);
     if (remaining > 0) {
       const seconds = Math.ceil(remaining / 1000);
 
