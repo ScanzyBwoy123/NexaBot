@@ -43,5 +43,6 @@ function createCommands() {
 
 module.exports = {
   plannedCommands,
-  createCommands
+  createCommands,
+  buildCommands: createCommands
 };
