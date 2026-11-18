@@ -347,3 +347,16 @@ test('Command registration rejects duplicate aliases within the same command', (
     /Duplicate command or alias/
   );
 });
+test('Command registration rejects aliases that are not an array', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'sample',
+      aliases: 'hello',
+      permission: 'public',
+      execute: async () => 'OK'
+    }),
+    /Invalid command alias/
+  );
+});
