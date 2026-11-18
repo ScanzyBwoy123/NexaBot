@@ -372,3 +372,16 @@ test('Command engine rejects non-string prefixes', () => {
     /Invalid command prefix/
   );
 });
+test('Command registration rejects negative cooldown values', () => {
+  assert.throws(
+    () => new CommandEngine({
+      commands: [{
+        name: 'test',
+        permission: 'public',
+        cooldownMs: -1,
+        execute: async () => 'OK'
+      }]
+    }),
+    /Invalid cooldown/
+  );
+});
