@@ -125,3 +125,43 @@ test('Command aliases execute the original command', async () => {
   assert.equal(result.command, 'greet');
   assert.equal(replies[0], 'Hello from NexaBot!');
 });
+test('Command cooldown blocks repeated execution', async () => {
+  let now = 1000;
+  let executions = 0;
+  const replies = [];
+
+  const engine = new CommandEngine({
+    prefix: '.',
+    now: () => now
+  });
+
+  engine.register({
+    name: 'slow',
+    permission: 'public',
+    cooldownMs: 3000,
+    execute: async () => {
+      executions++;
+      return 'Executed!';
+    }
+  });
+
+  const context = {
+    text: '.slow',
+    senderId: '233501234567',
+    reply: async message => replies.push(message)
+  };
+
+  const first = await engine.handle(context);
+  const second = await engine.handle(context);
+
+  assert.equal(first.ok, true);
+  assert.equal(second.code, 'COOLDOWN');
+  assert.equal(executions, 1);
+
+  now += 3000;
+
+  const third = await engine.handle(context);
+
+  assert.equal(third.ok, true);
+  assert.equal(executions, 2);
+});
