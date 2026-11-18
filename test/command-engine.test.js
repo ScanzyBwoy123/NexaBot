@@ -360,3 +360,9 @@ test('Command registration rejects aliases that are not an array', () => {
     /Invalid command alias/
   );
 });
+test('Command engine rejects an empty prefix', () => {
+  assert.throws(
+    () => new CommandEngine({ prefix: '' }),
+    /Invalid command prefix/
+  );
+});
