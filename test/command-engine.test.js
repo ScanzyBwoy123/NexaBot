@@ -506,3 +506,16 @@ test('Command registration rejects duplicate aliases regardless of case', () => 
     /Duplicate command or alias/
   );
 });
+test('Command registration rejects invalid aliases', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'greeting',
+      aliases: ['hello world'],
+      permission: 'public',
+      execute: async () => 'Hello'
+    }),
+    /Invalid command alias/
+  );
+});
