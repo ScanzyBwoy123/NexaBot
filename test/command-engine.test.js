@@ -424,3 +424,13 @@ test('Command registration rejects NaN cooldown values', () => {
     /Invalid cooldown/
   );
 });
+test('Command registration accepts zero cooldown values', () => {
+  assert.doesNotThrow(() => new CommandEngine({
+    commands: [{
+      name: 'test',
+      permission: 'public',
+      cooldownMs: 0,
+      execute: async () => 'OK'
+    }]
+  }));
+});
