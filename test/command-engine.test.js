@@ -104,3 +104,24 @@ test('Commands without the prefix are ignored', async () => {
 
   assert.equal(result.handled, false);
 });
+test('Command aliases execute the original command', async () => {
+  const engine = createEngine();
+  const replies = [];
+
+  engine.register({
+    name: 'greet',
+    aliases: ['hello'],
+    permission: 'public',
+    execute: async () => 'Hello from NexaBot!'
+  });
+
+  const result = await engine.handle({
+    text: '.hello',
+    senderId: '233501234567',
+    reply: async message => replies.push(message)
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.command, 'greet');
+  assert.equal(replies[0], 'Hello from NexaBot!');
+});
