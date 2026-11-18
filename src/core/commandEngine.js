@@ -41,7 +41,16 @@ this.now = options.now || Date.now;
 }
 
 const name = command.name.toLowerCase();
-
+if (
+  command.cooldownMs !== undefined &&
+  (
+    typeof command.cooldownMs !== 'number' ||
+    !Number.isFinite(command.cooldownMs) ||
+    command.cooldownMs < 0
+  )
+) {
+  throw new Error('Invalid cooldown value.');
+}
     if (!['public', 'owner', 'admin'].includes(command.permission)) {
       throw new Error(`Invalid permission for ${name}.`);
     }
