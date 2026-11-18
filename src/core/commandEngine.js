@@ -120,7 +120,23 @@ this.now = options.now || Date.now;
         };
       }
     }
+        const cooldownMs = command.cooldownMs || 0;
+    const cooldownKey = `${sender}:${command.name}`;
+    const lastUsed = this.cooldowns.get(cooldownKey) || 0;
+    const remaining = cooldownMs - (this.now() - lastUsed);
 
+    if (remaining > 0) {
+      const seconds = Math.ceil(remaining / 1000);
+
+      await send(`Please wait ${seconds} seconds before using this command again.`);
+
+      return {
+        handled: true,
+        ok: false,
+        code: 'COOLDOWN',
+        remainingMs: remaining
+      };
+    }
     try {
       const result = await command.execute({
         ...context,
@@ -128,7 +144,9 @@ this.now = options.now || Date.now;
         command: command.name,
         senderId: senderId
       });
-
+            if (cooldownMs > 0) {
+        this.cooldowns.set(cooldownKey, this.now());
+      }
       if (typeof result === 'string') {
         await send(result);
       } else if (result && result.message) {
