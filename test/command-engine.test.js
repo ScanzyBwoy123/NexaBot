@@ -519,3 +519,26 @@ test('Command registration rejects invalid aliases', () => {
     /Invalid command alias/
   );
 });
+test('Command aliases are registered case-insensitively', async () => {
+  const engine = createEngine();
+  let executed = false;
+
+  engine.register({
+    name: 'greeting',
+    aliases: ['HELLO'],
+    permission: 'public',
+    execute: async () => {
+      executed = true;
+      return 'Hello!';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.hello',
+    senderId: '233123456789'
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.command, 'greeting');
+  assert.equal(executed, true);
+});
