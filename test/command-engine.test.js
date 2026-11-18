@@ -411,3 +411,16 @@ test('Command registration rejects infinite cooldown values', () => {
     /Invalid cooldown/
   );
 });
+test('Command registration rejects NaN cooldown values', () => {
+  assert.throws(
+    () => new CommandEngine({
+      commands: [{
+        name: 'test',
+        permission: 'public',
+        cooldownMs: NaN,
+        execute: async () => 'OK'
+      }]
+    }),
+    /Invalid cooldown/
+  );
+});
