@@ -385,3 +385,16 @@ test('Command registration rejects negative cooldown values', () => {
     /Invalid cooldown/
   );
 });
+test('Command registration rejects non-numeric cooldown values', () => {
+  assert.throws(
+    () => new CommandEngine({
+      commands: [{
+        name: 'test',
+        permission: 'public',
+        cooldownMs: '1000',
+        execute: async () => 'OK'
+      }]
+    }),
+    /Invalid cooldown/
+  );
+});
