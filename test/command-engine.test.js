@@ -250,3 +250,30 @@ test('Admin commands reject access when admin verification fails', async () => {
   assert.equal(result.code, 'ADMIN_ONLY');
   assert.equal(executions, 0);
 });
+test('Aliases cannot bypass owner-only permissions', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    ownerIds: [OWNER_ID]
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'secret',
+    aliases: ['unlock'],
+    permission: 'owner',
+    execute: async () => {
+      executions++;
+      return 'Access granted';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.unlock',
+    senderId: '233501234567'
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'OWNER_ONLY');
+  assert.equal(executions, 0);
+});
