@@ -9,7 +9,8 @@ class CommandEngine {
     this.isGroupAdmin = options.isGroupAdmin || (async () => false);
     this.logger = options.logger || console;
     this.commands = new Map();
-
+     this.cooldowns = new Map();
+this.now = options.now || Date.now;
     for (const command of options.commands || []) {
       this.register(command);
     }
