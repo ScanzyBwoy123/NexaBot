@@ -2,7 +2,15 @@
 
 class CommandEngine {
   constructor(options = {}) {
-    this.prefix = options.prefix || '.';
+    this.prefix = options.prefix ?? '.';
+
+if (
+  typeof this.prefix !== 'string' ||
+  this.prefix.length === 0 ||
+  /\s/.test(this.prefix)
+) {
+  throw new Error('Invalid command prefix.');
+}
     this.ownerIds = new Set(
       (options.ownerIds || []).map(id => this.normalizeId(id))
     );
