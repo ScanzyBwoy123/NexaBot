@@ -366,3 +366,9 @@ test('Command engine rejects an empty prefix', () => {
     /Invalid command prefix/
   );
 });
+test('Command engine rejects non-string prefixes', () => {
+  assert.throws(
+    () => new CommandEngine({ prefix: 123 }),
+    /Invalid command prefix/
+  );
+});
