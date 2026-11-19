@@ -90,3 +90,42 @@ test('WhatsApp event handlers respond to all five connection events', () => {
     disconnected: 'test disconnection'
   });
 });
+test('WhatsApp message handler forwards valid messages and ignores invalid ones', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  const received = [];
+
+  const commandEngine = {
+    handle: async data => {
+      received.push(data);
+    }
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  const handler = client.listeners('message')[0];
+
+  const message = {
+    fromMe: false,
+    author: '233241234567@c.us',
+    from: '120363000000000000@g.us',
+    body: '.ping',
+    reply: async response => response
+  };
+
+  await handler(message);
+
+  assert.equal(received.length, 1);
+  assert.equal(received[0].text, '.ping');
+  assert.equal(received[0].senderId, '233241234567@c.us');
+  assert.equal(received[0].chatId, '120363000000000000@g.us');
+  assert.equal(typeof received[0].reply, 'function');
+
+  await handler({ ...message, fromMe: true });
+  await handler({ ...message, author: '', from: '' });
+  await handler({ ...message, body: 123 });
+
+  assert.equal(received.length, 1);
+});
