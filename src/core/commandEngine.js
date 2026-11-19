@@ -17,6 +17,10 @@ if (
     this.developerIds = new Set(
   (options.developerIds || []).map(id => this.normalizeId(id))
 );
+
+this.deployerIds = new Set(
+  (options.deployerIds || []).map(id => this.normalizeId(id))
+);
     this.isGroupAdmin = options.isGroupAdmin || (async () => false);
     this.logger = options.logger || console;
     this.commands = new Map();
@@ -54,7 +58,7 @@ if (
 ) {
   throw new Error('Invalid cooldown value.');
 }
-    if (!['public', 'owner', 'admin', 'developer'].includes(command.permission)) {
+    if (!['public', 'owner', 'admin', 'developer', 'deployer'].includes(command.permission)) {
       throw new Error(`Invalid permission for ${name}.`);
     }
 
@@ -197,6 +201,16 @@ if (new Set(names).size !== names.length) {
       handled: true,
       ok: false,
       code: 'DEVELOPER_ONLY'
+    };
+  }
+}
+    if (command.permission === 'deployer') {
+  if (!sender || !this.deployerIds.has(sender)) {
+    await send('This command is restricted to the bot deployer.');
+    return {
+      handled: true,
+      ok: false,
+      code: 'DEPLOYER_ONLY'
     };
   }
 }
