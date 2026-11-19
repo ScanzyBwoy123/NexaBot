@@ -666,3 +666,13 @@ test('Command parser handles extra spaces after the prefix', () => {
     args: []
   });
 });
+test('Command parser handles leading and trailing spaces', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('   .ping   ');
+
+  assert.deepEqual(result, {
+    name: 'ping',
+    args: []
+  });
+});
