@@ -85,22 +85,32 @@ if (new Set(names).size !== names.length) {
   }
 
   parse(text) {
-    if (typeof text !== 'string' || !text.startsWith(this.prefix)) {
-      return null;
-    }
-
-    const input = text.slice(this.prefix.length).trim();
-    if (!input) return null;
-
-    const parts = input.match(/"[^"]*"|'[^']*'|\S+/g) || [];
-
-    const name = parts.shift().toLowerCase();
-    const args = parts.map(arg =>
-      arg.replace(/^["']|["']$/g, '')
-    );
-
-    return { name, args };
+  if (typeof text !== 'string') {
+    return null;
   }
+
+  const inputText = text.trim();
+
+  if (!inputText.startsWith(this.prefix)) {
+    return null;
+  }
+
+  const input = inputText.slice(this.prefix.length).trim();
+
+  if (!input) {
+    return null;
+  }
+
+  const parts = input.match(/"[^"]*"|'[^']*'|\S+/g) || [];
+
+  const name = parts.shift().toLowerCase();
+
+  const args = parts.map(arg =>
+    arg.replace(/^["']|["']$/g, '')
+  );
+
+  return { name, args };
+}
 
   async handle(context = {}) {
     const { text, senderId, reply } = context;
