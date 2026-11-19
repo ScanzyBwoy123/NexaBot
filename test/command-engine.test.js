@@ -656,3 +656,13 @@ test('Command execution handles mixed-case command names', async () => {
   assert.equal(result.ok, true);
   assert.equal(result.command, 'ping');
 });
+test('Command parser handles extra spaces after the prefix', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.   ping');
+
+  assert.deepEqual(result, {
+    name: 'ping',
+    args: []
+  });
+});
