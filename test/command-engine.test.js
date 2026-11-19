@@ -1197,3 +1197,21 @@ test('WhatsApp phone IDs and LID IDs remain distinguishable', () => {
     engine.normalizeId('123456789012345@c.us')
   );
 });
+test('LID identity cannot inherit matching phone-number deployer permissions', async () => {
+  const engine = createEngine();
+
+  const phoneResult = await engine.handle({
+    text: '.ping',
+    senderId: `${OWNER_ID}@c.us`
+  });
+
+  assert.equal(phoneResult.ok, true);
+
+  const lidResult = await engine.handle({
+    text: '.ping',
+    senderId: `${OWNER_ID}@lid`
+  });
+
+  assert.equal(lidResult.ok, false);
+  assert.equal(lidResult.code, 'DEPLOYER_ONLY');
+});
