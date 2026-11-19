@@ -542,3 +542,24 @@ test('Command aliases are registered case-insensitively', async () => {
   assert.equal(result.command, 'greeting');
   assert.equal(executed, true);
 });
+test('Command arguments are separated and passed correctly', async () => {
+  const engine = createEngine();
+  let receivedArgs;
+
+  engine.register({
+    name: 'greet',
+    permission: 'public',
+    execute: async ({ args }) => {
+      receivedArgs = args;
+      return 'Hello!';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.greet John 25 Ghana',
+    senderId: '233123456789'
+  });
+
+  assert.equal(result.ok, true);
+  assert.deepEqual(receivedArgs, ['John', '25', 'Ghana']);
+});
