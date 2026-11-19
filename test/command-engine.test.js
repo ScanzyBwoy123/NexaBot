@@ -110,13 +110,13 @@ test('Command aliases execute the original command', async () => {
   engine.register({
     name: 'greet',
     aliases: ['hello'],
-    permission: 'public',
+    permission: 'deployer',
     execute: async () => 'Hello from NexaBot!'
   });
 
   const result = await engine.handle({
     text: '.hello',
-    senderId: '233501234567',
+    senderId: OWNER_ID,
     reply: async message => replies.push(message)
   });
 
