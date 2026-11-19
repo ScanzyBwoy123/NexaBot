@@ -11,11 +11,10 @@ const OWNER_ID = '233241234567';
 function createEngine() {
   return new CommandEngine({
     prefix: '.',
-    ownerIds: [OWNER_ID],
+    deployerIds: [OWNER_ID],
     commands: createCommands()
   });
 }
-
 test('NexaBot registers all 26 planned commands', () => {
   const engine = createEngine();
 
