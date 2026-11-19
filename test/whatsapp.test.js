@@ -26,7 +26,7 @@ function createMockCommandEngine(handle) {
       '987654321098765@lid'
     ]),
 
-    deployerIds: new Set(),
+    deployerId: '',
 
     handle
   };
