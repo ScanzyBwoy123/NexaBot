@@ -221,7 +221,7 @@ test('Non-deployers cannot execute deployer commands', async () => {
   assert.equal(result.ok, false);
 assert.equal(result.code, 'DEPLOYER_ONLY');
 });
-test('Deployer commands reject access when admin verification fails', async () => {
+test('Deployer commands reject unauthorized users', async () => {
 const engine = new CommandEngine({
   prefix: '.'
 });
