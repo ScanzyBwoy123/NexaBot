@@ -115,17 +115,27 @@ if (new Set(names).size !== names.length) {
 
     if (quote === '"' || quote === "'") {
       i++;
-      const start = i;
+      let value = '';
 
       while (i < input.length && input[i] !== quote) {
-        i++;
+        if (
+          input[i] === '\\' &&
+          i + 1 < input.length &&
+          (input[i + 1] === quote || input[i + 1] === '\\')
+        ) {
+          value += input[i + 1];
+          i += 2;
+        } else {
+          value += input[i];
+          i++;
+        }
       }
 
       if (i >= input.length) {
         return null;
       }
 
-      parts.push(input.slice(start, i));
+      parts.push(value);
       i++;
 
       if (i < input.length && !/\s/.test(input[i])) {
