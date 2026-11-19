@@ -222,12 +222,9 @@ test('WhatsApp message handler propagates reply failures', async () => {
   const client = new EventEmitter();
   let received;
 
-  const commandEngine = {
-    handle: async data => {
-      received = data;
-    }
-  };
-
+  const commandEngine = createMockCommandEngine(async data => {
+  received = data;
+});
   registerMessageHandler(client, commandEngine);
 
   const message = {
