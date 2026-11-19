@@ -1052,3 +1052,38 @@ test('Admin-only commands reject ordinary users', async () => {
   assert.equal(result.code, 'ADMIN_ONLY');
   assert.equal(executions, 0);
 });
+test('Developer-only commands reject non-developers', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    developerIds: ['233200000001'],
+    ownerIds: ['233200000002']
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'devdiagnostics',
+    permission: 'developer',
+    execute: async () => {
+      executions++;
+      return 'Developer access granted';
+    }
+  });
+
+  const deployerResult = await engine.handle({
+    text: '.devdiagnostics',
+    senderId: '233200000002'
+  });
+
+  assert.equal(deployerResult.ok, false);
+  assert.equal(deployerResult.code, 'DEVELOPER_ONLY');
+  assert.equal(executions, 0);
+
+  const developerResult = await engine.handle({
+    text: '.devdiagnostics',
+    senderId: '233200000001'
+  });
+
+  assert.equal(developerResult.ok, true);
+  assert.equal(executions, 1);
+});
