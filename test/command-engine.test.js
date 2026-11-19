@@ -179,7 +179,6 @@ test('Deployer commands reject missing sender IDs', async () => {
 test('Admin commands reject ordinary group members', async () => {
   const engine = new CommandEngine({
     prefix: '.',
-    isGroupAdmin: async () => false
   });
 
   let executions = 0;
