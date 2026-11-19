@@ -1027,3 +1027,28 @@ test('Owner-only permissions cannot be bypassed with uppercase commands', async 
   assert.equal(result.code, 'OWNER_ONLY');
   assert.equal(executions, 0);
 });
+test('Admin-only commands reject ordinary users', async () => {
+  const engine = createEngine();
+
+  let executions = 0;
+
+  engine.register({
+    name: 'admincheck',
+    permission: 'admin',
+    execute: async () => {
+      executions++;
+      return 'Access granted';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.admincheck',
+    senderId: '233501234567',
+    isGroup: true,
+    isAdmin: false
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'ADMIN_ONLY');
+  assert.equal(executions, 0);
+});
