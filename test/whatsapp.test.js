@@ -228,3 +228,40 @@ test('WhatsApp message handler propagates reply failures', async () => {
     }
   );
 });
+test('WhatsApp message handler reports command-processing errors', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  const expectedError = new Error('Command processing failed');
+
+  let receivedError;
+  let receivedMessage;
+
+  const commandEngine = {
+    handle: async () => {
+      throw expectedError;
+    }
+  };
+
+  registerMessageHandler(client, commandEngine, {
+    onError: (error, message) => {
+      receivedError = error;
+      receivedMessage = message;
+    }
+  });
+
+  const message = {
+    fromMe: false,
+    from: '233241234567@c.us',
+    body: '.ping',
+    reply: async response => response
+  };
+
+  const handler = client.listeners('message')[0];
+
+  await handler(message);
+
+  assert.equal(receivedError, expectedError);
+  assert.equal(receivedMessage, message);
+});
