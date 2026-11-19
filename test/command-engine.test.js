@@ -318,7 +318,7 @@ test('Command registration rejects names containing spaces', () => {
   assert.throws(() => {
     engine.register({
       name: 'bad name',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     });
   }, /Invalid command name/);
@@ -807,7 +807,7 @@ test('Command registration rejects names containing special characters', () => {
   assert.throws(
     () => engine.register({
       name: 'hello@world',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     }),
     /Invalid command name/
@@ -831,7 +831,7 @@ test('Command registration accepts hyphens and underscores in names', () => {
   assert.doesNotThrow(() => {
     engine.register({
       name: 'hello_world-2',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Valid'
     });
   });
@@ -867,7 +867,7 @@ test('Command registration rejects duplicate aliases', () => {
   engine.register({
     name: 'greet',
     aliases: ['hello'],
-    permission: 'public',
+    permission: 'deployer',
     execute: async () => 'Hello'
   });
 
@@ -875,7 +875,7 @@ test('Command registration rejects duplicate aliases', () => {
     () => engine.register({
       name: 'welcome',
       aliases: ['hello'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Welcome'
     }),
  /Duplicate command or alias/i
@@ -887,7 +887,7 @@ test('Command registration rejects missing execution functions', () => {
   assert.throws(
     () => engine.register({
       name: 'broken',
-      permission: 'public'
+      permission: 'deployer',
     }),
     /Invalid command registration/
   );
@@ -923,7 +923,7 @@ test('Command registration rejects non-string aliases', () => {
     () => engine.register({
       name: 'greet',
       aliases: [123],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     }),
     /Invalid command alias/
@@ -936,7 +936,7 @@ test('Command registration rejects non-array aliases', () => {
     () => engine.register({
       name: 'greet',
       aliases: 'hello',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     }),
     /Invalid command alias/
@@ -949,7 +949,7 @@ test('Command registration rejects empty aliases', () => {
     () => engine.register({
       name: 'greet',
       aliases: [''],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     }),
     /Invalid command alias/
@@ -962,7 +962,7 @@ test('Command registration rejects duplicate aliases within the same command', (
     () => engine.register({
       name: 'greet',
       aliases: ['hello', 'HELLO'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     }),
     /Duplicate command or alias/
@@ -974,14 +974,14 @@ test('Command registration rejects names that duplicate existing aliases', () =>
   engine.register({
     name: 'greet',
     aliases: ['hello'],
-    permission: 'public',
+    permission: 'deployer',
     execute: async () => 'Hello'
   });
 
   assert.throws(
     () => engine.register({
       name: 'hello',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Duplicate'
     }),
     /Duplicate command or alias/
@@ -992,7 +992,7 @@ test('Command registration rejects aliases that duplicate existing command names
 
   engine.register({
     name: 'greet',
-    permission: 'public',
+    permission: 'deployer',
     execute: async () => 'Hello'
   });
 
@@ -1000,7 +1000,7 @@ test('Command registration rejects aliases that duplicate existing command names
     () => engine.register({
       name: 'welcome',
       aliases: ['GREET'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Welcome'
     }),
     /Duplicate command or alias/
