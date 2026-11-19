@@ -160,11 +160,9 @@ test('WhatsApp message handler uses message.from when message.author is missing'
   const client = new EventEmitter();
   let received;
 
-  const commandEngine = {
-    handle: async data => {
-      received = data;
-    }
-  };
+  const commandEngine = createMockCommandEngine(async data => {
+  received = data;
+});
 
   registerMessageHandler(client, commandEngine);
 
