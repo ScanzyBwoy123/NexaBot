@@ -131,12 +131,13 @@ test('Command cooldown blocks repeated execution', async () => {
 
   const engine = new CommandEngine({
     prefix: '.',
+    deployerIds: [OWNER_ID],
     now: () => now
   });
 
   engine.register({
     name: 'slow',
-    permission: 'public',
+    permission: 'deployer',
     cooldownMs: 3000,
     execute: async () => {
       executions++;
@@ -146,7 +147,7 @@ test('Command cooldown blocks repeated execution', async () => {
 
   const context = {
     text: '.slow',
-    senderId: '233501234567',
+    senderId: OWNER_ID,
     reply: async message => replies.push(message)
   };
 
