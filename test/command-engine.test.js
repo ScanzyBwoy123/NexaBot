@@ -693,3 +693,13 @@ test('Command parser preserves quotation marks inside unquoted arguments', () =>
     args: ['John"Doe']
   });
 });
+test('Command parser supports escaped quotation marks inside quoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet "John \\"JD\\" Doe"');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['John "JD" Doe']
+  });
+});
