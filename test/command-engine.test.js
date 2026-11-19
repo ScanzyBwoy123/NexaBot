@@ -1394,3 +1394,30 @@ test('WhatsApp group administrators without deployer permission are denied comma
   assert.equal(result.code, 'DEPLOYER_ONLY');
   assert.equal(executions, 0);
 });
+test('Normal WhatsApp group members cannot execute deployer commands', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    deployerIds: ['233200000001']
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'membercheck',
+    permission: 'deployer',
+    execute: async () => {
+      executions++;
+      return 'Access granted';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.membercheck',
+    senderId: '233200000099',
+    isGroupAdmin: false
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'DEPLOYER_ONLY');
+  assert.equal(executions, 0);
+});
