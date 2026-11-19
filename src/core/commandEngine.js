@@ -14,10 +14,7 @@ if (
         this.developerIds = new Set(
       (options.developerIds || []).map(id => this.normalizeId(id))
     );
-
-    this.deployerIds = new Set(
-      (options.deployerIds || []).map(id => this.normalizeId(id))
-    );
+    this.deployerId = this.normalizeId(options.deployerId); 
     this.logger = options.logger || console;
     this.commands = new Map();
      this.cooldowns = new Map();
