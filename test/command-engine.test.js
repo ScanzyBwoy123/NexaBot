@@ -723,3 +723,13 @@ test('Command parser supports escaped single quotes inside single-quoted argumen
     args: ["John's phone"]
   });
 });
+test('Command parser supports escaped double quotes inside double-quoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet "He said \\"hello\\""');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['He said "hello"']
+  });
+});
