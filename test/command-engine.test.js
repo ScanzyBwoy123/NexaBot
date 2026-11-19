@@ -176,7 +176,7 @@ test('Deployer commands reject missing sender IDs', async () => {
   assert.equal(result.code, 'DEPLOYER_ONLY');
 });
 
-test('Admin commands reject ordinary group members', async () => {
+test('Deployer commands reject unauthorized users', async () => {
   const engine = new CommandEngine({
     prefix: '.',
   });
