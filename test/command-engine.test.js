@@ -876,6 +876,6 @@ test('Command registration rejects duplicate aliases', () => {
       permission: 'public',
       execute: async () => 'Welcome'
     }),
-    /already registered/i
+ /Duplicate command or alias/i
   );
 });
