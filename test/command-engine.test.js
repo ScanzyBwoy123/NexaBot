@@ -33,7 +33,7 @@ test('Command parser reads commands and arguments', () => {
   });
 });
 
-test('Public commands can be used by anyone', async () => {
+test('Deployer commands reject unauthorized users', async () => {
   const engine = createEngine();
   const replies = [];
 
@@ -43,8 +43,8 @@ test('Public commands can be used by anyone', async () => {
     reply: async message => replies.push(message)
   });
 
-  assert.equal(result.ok, true);
-  assert.equal(result.command, 'ping');
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'DEPLOYER_ONLY');
   assert.equal(replies.length, 1);
 });
 
