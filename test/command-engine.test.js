@@ -1035,7 +1035,6 @@ test('Developer-only commands reject non-developers', async () => {
   const engine = new CommandEngine({
     prefix: '.',
     developerIds: ['233200000001'],
-    ownerIds: ['233200000002']
   });
 
   let executions = 0;
