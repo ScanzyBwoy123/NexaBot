@@ -129,3 +129,31 @@ test('WhatsApp message handler forwards valid messages and ignores invalid ones'
 
   assert.equal(received.length, 1);
 });
+test('WhatsApp message handler uses message.from when message.author is missing', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  let received;
+
+  const commandEngine = {
+    handle: async data => {
+      received = data;
+    }
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  const handler = client.listeners('message')[0];
+
+  await handler({
+    fromMe: false,
+    from: '233241234567@c.us',
+    body: '.ping',
+    reply: async response => response
+  });
+
+  assert.ok(received);
+  assert.equal(received.senderId, '233241234567@c.us');
+  assert.equal(received.text, '.ping');
+});
