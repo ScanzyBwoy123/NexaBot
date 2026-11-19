@@ -440,6 +440,7 @@ test('Failed commands do not trigger cooldowns', async () => {
 
   const engine = new CommandEngine({
     prefix: '.',
+    deployerIds: [OWNER_ID],
     logger: { error: () => {} }
   });
 
@@ -460,7 +461,7 @@ test('Failed commands do not trigger cooldowns', async () => {
 
   const context = {
     text: '.retry',
-    senderId: '233501234567'
+    senderId: OWNER_ID
   };
 
   const first = await engine.handle(context);
