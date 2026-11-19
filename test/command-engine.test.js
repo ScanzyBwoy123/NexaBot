@@ -823,3 +823,14 @@ test('Command registration rejects names containing special characters', () => {
     /Invalid command name/
   );
 });
+test('Command registration accepts hyphens and underscores in names', () => {
+  const engine = createEngine();
+
+  assert.doesNotThrow(() => {
+    engine.register({
+      name: 'hello_world-2',
+      permission: 'public',
+      execute: async () => 'Valid'
+    });
+  });
+});
