@@ -63,7 +63,7 @@ test('Deployer commands reject unauthorized users', async () => {
   assert.match(replies[0], /deployer/i);
 });
 
-test('Owner can execute owner-only commands', async () => {
+test('Configured deployer can execute deployer-only commands', async () => {
   const engine = createEngine();
   const replies = [];
 
