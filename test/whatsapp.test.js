@@ -333,3 +333,95 @@ test('WhatsApp message handler preserves LID sender identities', async () => {
   assert.equal(received[0].senderId, '123456789012345@lid');
   assert.equal(received[1].senderId, '987654321098765@lid');
 });
+test('WhatsApp message handler resolves a valid LID to its phone identity', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+
+  client.getContactLidAndPhone = async ids => {
+    assert.deepEqual(ids, ['123456789012345@lid']);
+
+    return [{
+      lid: '123456789012345@lid',
+      pn: '233241234567@c.us'
+    }];
+  };
+
+  let received;
+
+  registerMessageHandler(client, {
+    handle: async data => {
+      received = data;
+    }
+  });
+
+  await client.listeners('message')[0]({
+    fromMe: false,
+    author: '123456789012345@lid',
+    from: '120363000000000000@g.us',
+    body: '.ping'
+  });
+
+  assert.equal(received.senderId, '233241234567@c.us');
+  assert.equal(received.originalSenderId, '123456789012345@lid');
+});
+
+test('WhatsApp message handler preserves LID when identity lookup fails', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+
+  client.getContactLidAndPhone = async () => {
+    throw new Error('Lookup failed');
+  };
+
+  let received;
+
+  registerMessageHandler(client, {
+    handle: async data => {
+      received = data;
+    }
+  });
+
+  await client.listeners('message')[0]({
+    fromMe: false,
+    author: '123456789012345@lid',
+    from: '120363000000000000@g.us',
+    body: '.ping'
+  });
+
+  assert.equal(received.senderId, '123456789012345@lid');
+  assert.equal(received.originalSenderId, '123456789012345@lid');
+});
+
+test('WhatsApp message handler rejects an unrelated identity mapping', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+
+  client.getContactLidAndPhone = async () => [{
+    lid: '999999999999999@lid',
+    pn: '233241234567@c.us'
+  }];
+
+  let received;
+
+  registerMessageHandler(client, {
+    handle: async data => {
+      received = data;
+    }
+  });
+
+  await client.listeners('message')[0]({
+    fromMe: false,
+    author: '123456789012345@lid',
+    from: '120363000000000000@g.us',
+    body: '.ping'
+  });
+
+  assert.equal(received.senderId, '123456789012345@lid');
+  assert.notEqual(received.senderId, '233241234567@c.us');
+});
