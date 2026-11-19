@@ -1179,3 +1179,21 @@ test('createNexaBot registers commands and enforces deployer permissions', async
   assert.equal(denied.ok, false);
   assert.equal(denied.code, 'DEPLOYER_ONLY');
 });
+test('WhatsApp phone IDs and LID IDs remain distinguishable', () => {
+  const engine = createEngine();
+
+  assert.equal(
+    engine.normalizeId('233241234567@c.us'),
+    '233241234567'
+  );
+
+  assert.equal(
+    engine.normalizeId('123456789012345@lid'),
+    '123456789012345@lid'
+  );
+
+  assert.notEqual(
+    engine.normalizeId('123456789012345@lid'),
+    engine.normalizeId('123456789012345@c.us')
+  );
+});
