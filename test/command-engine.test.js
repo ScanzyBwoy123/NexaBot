@@ -899,6 +899,6 @@ test('Command registration rejects invalid permission levels', () => {
       permission: 'superadmin',
       execute: async () => 'OK'
     }),
-    /Invalid command registration/
+    /Invalid permission/
   );
 });
