@@ -703,3 +703,13 @@ test('Command parser supports escaped quotation marks inside quoted arguments', 
     args: ['John "JD" Doe']
   });
 });
+test('Command parser supports escaped backslashes inside quoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet "C:\\\\Users\\\\John"');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['C:\\Users\\John']
+  });
+});
