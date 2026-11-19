@@ -604,3 +604,13 @@ test('Command parser handles single-quoted arguments', () => {
     args: ['John Doe']
   });
 });
+test('Command parser handles mixed quoted and unquoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse(`.test hello "John Doe" 'Ghana'`);
+
+  assert.deepEqual(result, {
+    name: 'test',
+    args: ['hello', 'John Doe', 'Ghana']
+  });
+});
