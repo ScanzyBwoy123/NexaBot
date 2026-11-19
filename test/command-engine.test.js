@@ -614,3 +614,13 @@ test('Command parser handles mixed quoted and unquoted arguments', () => {
     args: ['hello', 'John Doe', 'Ghana']
   });
 });
+test('Command parser handles command names case-insensitively', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.PING');
+
+  assert.deepEqual(result, {
+    name: 'ping',
+    args: []
+  });
+});
