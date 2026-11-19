@@ -2,7 +2,7 @@
 
 const path = require('node:path');
 const { Client, LocalAuth } = require('whatsapp-web.js');
-
+const { createIdentityResolver } = require('./core/identityResolver');
 function createWhatsAppClient(options = {}) {
   const authDir = path.resolve(
     options.authDir ||
