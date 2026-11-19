@@ -23,8 +23,9 @@ function createNexaBot(options = {}) {
   const engine = new CommandEngine({
     prefix: options.prefix ?? process.env.COMMAND_PREFIX ?? '.',
     ownerIds,
-    developerIds,
-    isGroupAdmin: options.isGroupAdmin,
+developerIds,
+deployerIds,
+isGroupAdmin: options.isGroupAdmin,
     logger: options.logger
   });
   for (const command of buildCommands()) {
