@@ -733,3 +733,13 @@ test('Command parser supports escaped double quotes inside double-quoted argumen
     args: ['He said "hello"']
   });
 });
+test('Command parser preserves backslashes in unquoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet C:\\Users\\John');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['C:\\Users\\John']
+  });
+});
