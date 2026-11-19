@@ -10,13 +10,10 @@ function createNexaBot(options = {}) {
       .split(',')
       .map(id => id.trim())
       .filter(Boolean);
-
-  const deployerIds =
-    options.deployerIds ??
-    (process.env.DEPLOYER_IDS ?? '')
-      .split(',')
-      .map(id => id.trim())
-      .filter(Boolean);
+    const deployerId =
+    options.deployerId ??
+    process.env.DEPLOYER_ID ??
+    '';
 
   const engine = new CommandEngine({
     prefix: options.prefix ?? process.env.COMMAND_PREFIX ?? '.',
