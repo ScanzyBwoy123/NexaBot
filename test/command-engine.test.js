@@ -676,3 +676,10 @@ test('Command parser handles leading and trailing spaces', () => {
     args: []
   });
 });
+test('Command parser rejects unfinished double quotes', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet "John Doe');
+
+  assert.equal(result, null);
+});
