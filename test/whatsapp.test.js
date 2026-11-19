@@ -123,11 +123,9 @@ test('WhatsApp message handler forwards valid messages and ignores invalid ones'
   const client = new EventEmitter();
   const received = [];
 
-  const commandEngine = {
-    handle: async data => {
-      received.push(data);
-    }
-  };
+  const commandEngine = createMockCommandEngine(async data => {
+  received.push(data);
+});
 
   registerMessageHandler(client, commandEngine);
 
