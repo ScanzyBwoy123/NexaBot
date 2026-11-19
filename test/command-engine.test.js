@@ -1064,10 +1064,9 @@ test('Group admins cannot use deployer commands unless they are the deployer', a
   const GROUP_ADMIN_ID = '233501234567';
 
   const engine = new CommandEngine({
-    prefix: '.',
-    deployerIds: [DEPLOYER_ID],
-    isGroupAdmin: async () => true
-  });
+  prefix: '.',
+  deployerIds: [DEPLOYER_ID]
+});
 
   let executions = 0;
 
