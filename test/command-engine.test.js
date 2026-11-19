@@ -634,3 +634,14 @@ test('Command parser handles mixed-case command names', () => {
     args: []
   });
 });
+test('Command execution handles uppercase command names', async () => {
+  const engine = createEngine();
+
+  const result = await engine.handle({
+    text: '.PING',
+    senderId: '233501234567'
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.command, 'ping');
+});
