@@ -251,10 +251,10 @@ test('Deployer commands reject access when admin verification fails', async () =
   assert.equal(result.code, 'DEPLOYER_ONLY');
   assert.equal(executions, 0);
 });
-test('Aliases cannot bypass owner-only permissions', async () => {
+test('Aliases cannot bypass deployer-only permissions', async () => {
   const engine = new CommandEngine({
     prefix: '.',
-    ownerIds: [OWNER_ID]
+    deployerIds: [OWNER_ID]
   });
 
   let executions = 0;
@@ -262,7 +262,7 @@ test('Aliases cannot bypass owner-only permissions', async () => {
   engine.register({
     name: 'secret',
     aliases: ['unlock'],
-    permission: 'owner',
+    permission: 'deployer',
     execute: async () => {
       executions++;
       return 'Access granted';
@@ -275,7 +275,7 @@ test('Aliases cannot bypass owner-only permissions', async () => {
   });
 
   assert.equal(result.ok, false);
-  assert.equal(result.code, 'OWNER_ONLY');
+  assert.equal(result.code, 'DEPLOYER_ONLY');
   assert.equal(executions, 0);
 });
 test('Duplicate aliases cannot overwrite existing commands', () => {
