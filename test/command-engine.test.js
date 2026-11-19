@@ -773,3 +773,14 @@ test('Command parser handles newlines between arguments', () => {
     args: ['John', 'Doe']
   });
 });
+test('Command parser handles mixed whitespace between arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet \t\n John \n\t Doe');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['John', 'Doe']
+  });
+});
+
