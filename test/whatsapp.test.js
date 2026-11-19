@@ -61,3 +61,32 @@ test('WhatsApp client uses a separate NexaBot authentication directory', () => {
     delete require.cache[require.resolve('../src/whatsapp')];
   }
 });
+test('WhatsApp event handlers respond to all five connection events', () => {
+  const { EventEmitter } = require('node:events');
+  const { registerWhatsAppEvents } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  const received = {};
+
+  registerWhatsAppEvents(client, {
+    onQR: qr => received.qr = qr,
+    onAuthenticated: () => received.authenticated = true,
+    onReady: () => received.ready = true,
+    onAuthFailure: message => received.authFailure = message,
+    onDisconnected: reason => received.disconnected = reason
+  });
+
+  client.emit('qr', 'test-qr-code');
+  client.emit('authenticated');
+  client.emit('ready');
+  client.emit('auth_failure', 'test authentication error');
+  client.emit('disconnected', 'test disconnection');
+
+  assert.deepEqual(received, {
+    qr: 'test-qr-code',
+    authenticated: true,
+    ready: true,
+    authFailure: 'test authentication error',
+    disconnected: 'test disconnection'
+  });
+});
