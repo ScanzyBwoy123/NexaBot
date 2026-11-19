@@ -14,6 +14,9 @@ if (
     this.ownerIds = new Set(
       (options.ownerIds || []).map(id => this.normalizeId(id))
     );
+    this.developerIds = new Set(
+  (options.developerIds || []).map(id => this.normalizeId(id))
+);
     this.isGroupAdmin = options.isGroupAdmin || (async () => false);
     this.logger = options.logger || console;
     this.commands = new Map();
