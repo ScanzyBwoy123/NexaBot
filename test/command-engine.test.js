@@ -1024,7 +1024,6 @@ test('Owner-only permissions cannot be bypassed with uppercase commands', async 
     text: '.SECRETCHECK',
     senderId: '233501234567'
   });
-
   test('Command registration rejects owner permission', () => {
   const engine = createEngine();
 
