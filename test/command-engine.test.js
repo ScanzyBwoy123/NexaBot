@@ -843,7 +843,7 @@ test('Command registration rejects aliases containing special characters', () =>
     () => engine.register({
       name: 'greet',
       aliases: ['hello@world'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     }),
     /Invalid command alias/
