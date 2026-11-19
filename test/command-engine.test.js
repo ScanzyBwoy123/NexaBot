@@ -355,7 +355,7 @@ test('Command registration rejects aliases that are not an array', () => {
     () => engine.register({
       name: 'sample',
       aliases: 'hello',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'OK'
     }),
     /Invalid command alias/
@@ -378,7 +378,7 @@ test('Command registration rejects negative cooldown values', () => {
     () => new CommandEngine({
       commands: [{
         name: 'test',
-        permission: 'public',
+        permission: 'deployer',
         cooldownMs: -1,
         execute: async () => 'OK'
       }]
@@ -391,7 +391,7 @@ test('Command registration rejects non-numeric cooldown values', () => {
     () => new CommandEngine({
       commands: [{
         name: 'test',
-        permission: 'public',
+        permission: 'deployer',
         cooldownMs: '1000',
         execute: async () => 'OK'
       }]
@@ -404,7 +404,7 @@ test('Command registration rejects infinite cooldown values', () => {
     () => new CommandEngine({
       commands: [{
         name: 'test',
-        permission: 'public',
+        permission: 'deployer',
         cooldownMs: Infinity,
         execute: async () => 'OK'
       }]
@@ -417,7 +417,7 @@ test('Command registration rejects NaN cooldown values', () => {
     () => new CommandEngine({
       commands: [{
         name: 'test',
-        permission: 'public',
+        permission: 'deployer',
         cooldownMs: NaN,
         execute: async () => 'OK'
       }]
@@ -429,7 +429,7 @@ test('Command registration accepts zero cooldown values', () => {
   assert.doesNotThrow(() => new CommandEngine({
     commands: [{
       name: 'test',
-      permission: 'public',
+      permission: 'deployer',
       cooldownMs: 0,
       execute: async () => 'OK'
     }]
@@ -445,7 +445,7 @@ test('Failed commands do not trigger cooldowns', async () => {
 
   engine.register({
     name: 'retry',
-    permission: 'public',
+    permission: 'deployer',
     cooldownMs: 5000,
     execute: async () => {
       executions++;
@@ -475,14 +475,14 @@ test('Command registration rejects duplicate names regardless of case', () => {
 
   engine.register({
     name: 'greeting',
-    permission: 'public',
+    permission: 'deployer',
     execute: async () => 'First'
   });
 
   assert.throws(
     () => engine.register({
       name: 'GREETING',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Second'
     }),
     /Duplicate command or alias/
@@ -493,15 +493,15 @@ test('Command registration rejects duplicate aliases regardless of case', () => 
 
   engine.register({
     name: 'first',
-    aliases: ['hello'],
-    permission: 'public',
+    aliases: ['
+    permission: 'deployer',
     execute: async () => 'First'
   });
 
   assert.throws(
     () => engine.register({
       name: 'HELLO',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Second'
     }),
     /Duplicate command or alias/
@@ -514,7 +514,7 @@ test('Command registration rejects invalid aliases', () => {
     () => engine.register({
       name: 'greeting',
       aliases: ['hello world'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Hello'
     }),
     /Invalid command alias/
@@ -527,7 +527,7 @@ test('Command aliases are registered case-insensitively', async () => {
   engine.register({
     name: 'greeting',
     aliases: ['HELLO'],
-    permission: 'public',
+    permission: 'deployer',
     execute: async () => {
       executed = true;
       return 'Hello!';
@@ -549,7 +549,7 @@ test('Command arguments are separated and passed correctly', async () => {
 
   engine.register({
     name: 'greet',
-    permission: 'public',
+    permission: 'deployer',
     execute: async ({ args }) => {
       receivedArgs = args;
       return 'Hello!';
@@ -570,7 +570,7 @@ test('Command parser keeps quoted arguments together', async () => {
 
   engine.register({
     name: 'greet',
-    permission: 'public',
+    permission: 'deployer',
     execute: async ({ args }) => {
       receivedArgs = args;
       return 'Hello!';
@@ -818,7 +818,7 @@ test('Command registration rejects names containing special characters', () => {
   assert.throws(
     () => engine.register({
       name: 'hello@world',
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Invalid'
     }),
     /Invalid command name/
