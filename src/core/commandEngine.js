@@ -194,27 +194,27 @@ if (new Set(names).size !== names.length) {
     }
 
     const sender = this.normalizeId(senderId);
-    if (command.permission === ‘developer’) {
-if (!sender || !this.developerIds.has(sender)) {
-await send(‘This command is restricted to the NexaBot developer.’);
-return {
-handled: true,
-ok: false,
-code: ‘DEVELOPER_ONLY’
-};
-}
-}
+        if (command.permission === 'developer') {
+      if (!sender || !this.developerIds.has(sender)) {
+        await send('This command is restricted to the NexaBot developer.');
+        return {
+          handled: true,
+          ok: false,
+          code: 'DEVELOPER_ONLY'
+        };
+      }
+    }
 
-if (command.permission === 'developer') {
-  if (!sender || !this.deployerIds.has(sender)) {
-    await send('This command is restricted to the bot deployer.');
-    return {
-      handled: true,
-      ok: false,
-      code: 'DEPLOYER_ONLY'
-    };
-  }
-}
+    if (command.permission === 'deployer') {
+      if (!sender || !this.deployerIds.has(sender)) {
+        await send('This command is restricted to the bot deployer.');
+        return {
+          handled: true,
+          ok: false,
+          code: 'DEPLOYER_ONLY'
+        };
+      }
+    }
 const cooldownMs = command.cooldownMs || 0;
 const cooldownKey = `${sender}:${command.name}`;
 const lastUsed = this.cooldowns.get(cooldownKey);
