@@ -285,7 +285,7 @@ test('Duplicate aliases cannot overwrite existing commands', () => {
     engine.register({
       name: 'anothercommand',
       aliases: ['ping'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Hijacked!'
     });
   }, /Duplicate command or alias/);
