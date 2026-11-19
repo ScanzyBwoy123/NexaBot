@@ -580,7 +580,7 @@ test('Command parser keeps quoted arguments together', async () => {
 
   const result = await engine.handle({
     text: '.greet "John Doe" "Accra Ghana"',
-    senderId: '233123456789'
+    senderId: OWNER_ID
   });
 
   assert.equal(result.ok, true);
