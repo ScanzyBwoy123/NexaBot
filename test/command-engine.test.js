@@ -342,7 +342,7 @@ test('Command registration rejects duplicate aliases within the same command', (
     () => engine.register({
       name: 'sample',
       aliases: ['test', 'test'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => ({ message: 'OK' })
     }),
     /Duplicate command or alias/
