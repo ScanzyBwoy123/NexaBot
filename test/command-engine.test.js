@@ -847,3 +847,15 @@ test('Command registration rejects aliases containing special characters', () =>
     /Invalid command alias/
   );
 });
+test('Command registration accepts aliases with hyphens and underscores', () => {
+  const engine = createEngine();
+
+  assert.doesNotThrow(() => {
+    engine.register({
+      name: 'greet',
+      aliases: ['hello-world', 'hello_world'],
+      permission: 'public',
+      execute: async () => 'Hello'
+    });
+  });
+});
