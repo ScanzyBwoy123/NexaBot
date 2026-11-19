@@ -624,3 +624,13 @@ test('Command parser handles command names case-insensitively', () => {
     args: []
   });
 });
+test('Command parser handles mixed-case command names', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.PiNg');
+
+  assert.deepEqual(result, {
+    name: 'ping',
+    args: []
+  });
+});
