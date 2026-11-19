@@ -1087,3 +1087,42 @@ test('Developer-only commands reject non-developers', async () => {
   assert.equal(developerResult.ok, true);
   assert.equal(executions, 1);
 });
+test('Group admins cannot use deployer commands unless they are the deployer', async () => {
+  const DEPLOYER_ID = '233200000002';
+  const GROUP_ADMIN_ID = '233501234567';
+
+  const engine = new CommandEngine({
+    prefix: '.',
+    deployerIds: [DEPLOYER_ID],
+    isGroupAdmin: async () => true
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'deployersettings',
+    permission: 'deployer',
+    execute: async () => {
+      executions++;
+      return 'Deployer access granted';
+    }
+  });
+
+  const adminResult = await engine.handle({
+    text: '.deployersettings',
+    senderId: GROUP_ADMIN_ID,
+    isGroup: true
+  });
+
+  assert.equal(adminResult.ok, false);
+  assert.equal(adminResult.code, 'DEPLOYER_ONLY');
+  assert.equal(executions, 0);
+
+  const deployerResult = await engine.handle({
+    text: '.deployersettings',
+    senderId: DEPLOYER_ID
+  });
+
+  assert.equal(deployerResult.ok, true);
+  assert.equal(executions, 1);
+});
