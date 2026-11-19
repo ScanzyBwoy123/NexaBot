@@ -859,3 +859,23 @@ test('Command registration accepts aliases with hyphens and underscores', () => 
     });
   });
 });
+test('Command registration rejects duplicate aliases', () => {
+  const engine = createEngine();
+
+  engine.register({
+    name: 'greet',
+    aliases: ['hello'],
+    permission: 'public',
+    execute: async () => 'Hello'
+  });
+
+  assert.throws(
+    () => engine.register({
+      name: 'welcome',
+      aliases: ['hello'],
+      permission: 'public',
+      execute: async () => 'Welcome'
+    }),
+    /already registered/i
+  );
+});
