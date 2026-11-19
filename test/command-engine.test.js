@@ -811,3 +811,15 @@ test('Command registration rejects names containing special characters', () => {
     /Invalid command name/
   );
 });
+test('Command registration rejects names containing special characters', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'hello@world',
+      permission: 'public',
+      execute: async () => 'Invalid'
+    }),
+    /Invalid command name/
+  );
+});
