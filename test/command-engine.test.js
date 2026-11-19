@@ -1305,3 +1305,65 @@ test('createNexaBot reads developer and deployer IDs from environment variables'
     }
   }
 });
+test('createNexaBot supports multiple comma-separated developer and deployer IDs', async () => {
+  const { createNexaBot } = require('../src/index');
+
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerIds = process.env.DEPLOYER_IDS;
+
+  try {
+    process.env.DEVELOPER_IDS = '233200000011, 233200000012';
+    process.env.DEPLOYER_IDS = '233200000021, 233200000022';
+
+    const engine = createNexaBot({ prefix: '.' });
+
+    let executions = 0;
+
+    engine.register({
+      name: 'devcheck',
+      permission: 'developer',
+      execute: async () => {
+        executions++;
+        return 'Developer access granted';
+      }
+    });
+
+    for (const senderId of [
+      '233200000011@c.us',
+      '233200000012@c.us'
+    ]) {
+      const result = await engine.handle({
+        text: '.devcheck',
+        senderId
+      });
+
+      assert.equal(result.ok, true);
+    }
+
+    for (const senderId of [
+      '233200000021@c.us',
+      '233200000022@c.us'
+    ]) {
+      const result = await engine.handle({
+        text: '.ping',
+        senderId
+      });
+
+      assert.equal(result.ok, true);
+    }
+
+    assert.equal(executions, 2);
+  } finally {
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerIds === undefined) {
+      delete process.env.DEPLOYER_IDS;
+    } else {
+      process.env.DEPLOYER_IDS = previousDeployerIds;
+    }
+  }
+});
