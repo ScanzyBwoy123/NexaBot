@@ -30,6 +30,31 @@ function createWhatsAppClient(options = {}) {
   return client;
 }
 
+function registerWhatsAppEvents(client, handlers = {}) {
+  client.on('qr', qr => {
+    handlers.onQR?.(qr);
+  });
+
+  client.on('authenticated', () => {
+    handlers.onAuthenticated?.();
+  });
+
+  client.on('ready', () => {
+    handlers.onReady?.();
+  });
+
+  client.on('auth_failure', message => {
+    handlers.onAuthFailure?.(message);
+  });
+
+  client.on('disconnected', reason => {
+    handlers.onDisconnected?.(reason);
+  });
+
+  return client;
+}
+
 module.exports = {
-  createWhatsAppClient
+  createWhatsAppClient,
+  registerWhatsAppEvents
 };
