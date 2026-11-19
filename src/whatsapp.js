@@ -53,7 +53,37 @@ function registerWhatsAppEvents(client, handlers = {}) {
 
   return client;
 }
+function registerMessageHandler(client, commandEngine) {
+  if (!client || typeof client.on !== 'function') {
+    throw new Error('Invalid WhatsApp client.');
+  }
 
+  if (!commandEngine || typeof commandEngine.handle !== 'function') {
+    throw new Error('Invalid command engine.');
+  }
+
+  client.on('message', async message => {
+    if (!message || message.fromMe) {
+      return;
+    }
+
+    const senderId = message.author || message.from;
+
+    if (!senderId || typeof message.body !== 'string') {
+      return;
+    }
+
+    await commandEngine.handle({
+      text: message.body,
+      senderId,
+      chatId: message.from,
+      message,
+      reply: async response => message.reply(response)
+    });
+  });
+
+  return client;
+}
 module.exports = {
   createWhatsAppClient,
   registerWhatsAppEvents
