@@ -92,7 +92,20 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
           commandSenderId = resolved.pn;
         }
       }
+            const normalizedSender = commandEngine.normalizeId(commandSenderId);
 
+      const isDeveloper =
+        normalizedSender &&
+        commandEngine.developerIds.has(normalizedSender);
+
+      const isDeployer =
+        normalizedSender &&
+        commandEngine.deployerIds.has(normalizedSender);
+
+      // Reject all interactions from unauthorized users.
+      if (!isDeveloper && !isDeployer) {
+        return;
+      }
       await commandEngine.handle({
         text: message.body,
         senderId: commandSenderId,
