@@ -186,11 +186,9 @@ test('WhatsApp message handler sends replies through the original message', asyn
   const client = new EventEmitter();
   let received;
 
-  const commandEngine = {
-    handle: async data => {
-      received = data;
-    }
-  };
+  const commandEngine = createMockCommandEngine(async data => {
+  received = data;
+});
 
   registerMessageHandler(client, commandEngine);
 
