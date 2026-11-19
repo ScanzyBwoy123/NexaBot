@@ -27,7 +27,7 @@ this.now = options.now || Date.now;
     }
   }
 
-    normalizeId(id) {
+      normalizeId(id) {
     const value = String(id ?? '').trim().toLowerCase();
 
     if (!value) {
@@ -39,6 +39,10 @@ this.now = options.now || Date.now;
     if (match) {
       const identifier = match[1].replace(/\D/g, '');
       const server = match[2];
+
+      if (server === 'c.us') {
+        return identifier;
+      }
 
       return identifier ? `${identifier}@${server}` : '';
     }
