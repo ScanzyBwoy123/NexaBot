@@ -683,3 +683,13 @@ test('Command parser rejects unfinished double quotes', () => {
 
   assert.equal(result, null);
 });
+test('Command parser preserves quotation marks inside unquoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet John"Doe');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['John"Doe']
+  });
+});
