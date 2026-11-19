@@ -985,3 +985,22 @@ test('Command registration rejects names that duplicate existing aliases', () =>
     /Duplicate command or alias/
   );
 });
+test('Command registration rejects aliases that duplicate existing command names', () => {
+  const engine = createEngine();
+
+  engine.register({
+    name: 'greet',
+    permission: 'public',
+    execute: async () => 'Hello'
+  });
+
+  assert.throws(
+    () => engine.register({
+      name: 'welcome',
+      aliases: ['GREET'],
+      permission: 'public',
+      execute: async () => 'Welcome'
+    }),
+    /Duplicate command or alias/
+  );
+});
