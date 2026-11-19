@@ -1126,3 +1126,30 @@ test('Group admins cannot use deployer commands unless they are the deployer', a
   assert.equal(deployerResult.ok, true);
   assert.equal(executions, 1);
 });
+test('Developers cannot use deployer commands unless they are also deployers', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    developerIds: ['233200000001'],
+    deployerIds: ['233200000002']
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'deployersettings',
+    permission: 'deployer',
+    execute: async () => {
+      executions++;
+      return 'Deployer access granted';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.deployersettings',
+    senderId: '233200000001'
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'DEPLOYER_ONLY');
+  assert.equal(executions, 0);
+});
