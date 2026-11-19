@@ -559,7 +559,7 @@ test('Command arguments are separated and passed correctly', async () => {
 
   const result = await engine.handle({
     text: '.greet John 25 Ghana',
-    senderId: '233123456789'
+    senderId: OWNER_ID
   });
 
   assert.equal(result.ok, true);
