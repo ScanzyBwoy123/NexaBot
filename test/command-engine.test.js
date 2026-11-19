@@ -902,3 +902,15 @@ test('Command registration rejects invalid permission levels', () => {
     /Invalid permission/
   );
 });
+test('Command registration rejects non-string command names', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 123,
+      permission: 'public',
+      execute: async () => 'Invalid'
+    }),
+    /Invalid command name/
+  );
+});
