@@ -265,3 +265,37 @@ test('WhatsApp message handler reports command-processing errors', async () => {
   assert.equal(receivedError, expectedError);
   assert.equal(receivedMessage, message);
 });
+test('WhatsApp message handler contains errors thrown by the error callback', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+
+  const commandEngine = {
+    handle: async () => {
+      throw new Error('Command processing failed');
+    }
+  };
+
+  let callbackCalled = false;
+
+  registerMessageHandler(client, commandEngine, {
+    onError: () => {
+      callbackCalled = true;
+      throw new Error('Error callback failed');
+    }
+  });
+
+  const message = {
+    fromMe: false,
+    from: '233241234567@c.us',
+    body: '.ping',
+    reply: async response => response
+  };
+
+  const handler = client.listeners('message')[0];
+
+  await assert.doesNotReject(handler(message));
+
+  assert.equal(callbackCalled, true);
+});
