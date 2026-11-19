@@ -753,3 +753,13 @@ test('Command parser handles multiple spaces between arguments', () => {
     args: ['John', 'Doe']
   });
 });
+test('Command parser handles tabs between arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet\tJohn\tDoe');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['John', 'Doe']
+  });
+});
