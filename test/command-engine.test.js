@@ -1215,3 +1215,36 @@ test('LID identity cannot inherit matching phone-number deployer permissions', a
   assert.equal(lidResult.ok, false);
   assert.equal(lidResult.code, 'DEPLOYER_ONLY');
 });
+test('LID identity cannot inherit matching phone-number developer permissions', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    developerIds: ['233241234567']
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'devcheck',
+    permission: 'developer',
+    execute: async () => {
+      executions++;
+      return 'Developer access granted';
+    }
+  });
+
+  const phoneResult = await engine.handle({
+    text: '.devcheck',
+    senderId: '233241234567@c.us'
+  });
+
+  assert.equal(phoneResult.ok, true);
+
+  const lidResult = await engine.handle({
+    text: '.devcheck',
+    senderId: '233241234567@lid'
+  });
+
+  assert.equal(lidResult.ok, false);
+  assert.equal(lidResult.code, 'DEVELOPER_ONLY');
+  assert.equal(executions, 1);
+});
