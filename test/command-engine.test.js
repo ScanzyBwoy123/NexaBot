@@ -763,3 +763,13 @@ test('Command parser handles tabs between arguments', () => {
     args: ['John', 'Doe']
   });
 });
+test('Command parser handles newlines between arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet\nJohn\nDoe');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['John', 'Doe']
+  });
+});
