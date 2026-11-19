@@ -223,7 +223,7 @@ test('Group admins cannot execute deployer commands without deployer identity', 
   assert.equal(result.ok, false);
 assert.equal(result.code, 'DEPLOYER_ONLY');
 });
-test('Admin commands reject access when admin verification fails', async () => {
+test('Deployer commands reject access when admin verification fails', async () => {
   const engine = new CommandEngine({
     prefix: '.',
     isGroupAdmin: async () => {
@@ -235,7 +235,7 @@ test('Admin commands reject access when admin verification fails', async () => {
 
   engine.register({
     name: 'secure',
-    permission: 'admin',
+    permission: 'deployer',
     execute: async () => {
       executions++;
       return 'Allowed';
@@ -248,7 +248,7 @@ test('Admin commands reject access when admin verification fails', async () => {
   });
 
   assert.equal(result.ok, false);
-  assert.equal(result.code, 'ADMIN_ONLY');
+  assert.equal(result.code, 'DEPLOYER_ONLY');
   assert.equal(executions, 0);
 });
 test('Aliases cannot bypass owner-only permissions', async () => {
