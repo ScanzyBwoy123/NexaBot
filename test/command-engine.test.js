@@ -1151,3 +1151,31 @@ test('Deployers cannot execute developer-only commands', async () => {
   assert.equal(result.code, 'DEVELOPER_ONLY');
   assert.equal(executions, 0);
 });
+test('createNexaBot registers commands and enforces deployer permissions', async () => {
+  const { createNexaBot } = require('../src/index');
+
+  const DEPLOYER_ID = '233241234567';
+
+  const engine = createNexaBot({
+    prefix: '.',
+    deployerIds: [DEPLOYER_ID]
+  });
+
+  assert.equal(engine.list().length, 26);
+
+  const allowed = await engine.handle({
+    text: '.ping',
+    senderId: DEPLOYER_ID
+  });
+
+  assert.equal(allowed.ok, true);
+  assert.equal(allowed.command, 'ping');
+
+  const denied = await engine.handle({
+    text: '.ping',
+    senderId: '233501234567'
+  });
+
+  assert.equal(denied.ok, false);
+  assert.equal(denied.code, 'DEPLOYER_ONLY');
+});
