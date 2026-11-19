@@ -879,3 +879,14 @@ test('Command registration rejects duplicate aliases', () => {
  /Duplicate command or alias/i
   );
 });
+test('Command registration rejects missing execution functions', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'broken',
+      permission: 'public'
+    }),
+    /Invalid command registration/
+  );
+});
