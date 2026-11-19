@@ -113,3 +113,19 @@ test('rejects empty or invalid sender IDs safely', async () => {
   assert.equal(await resolver.resolve('   '), null);
   assert.equal(await resolver.resolve(null), null);
 });
+test('rejects an unrelated LID-to-phone mapping', async () => {
+  const client = {
+    getContactLidAndPhone: async () => [
+      {
+        lid: '999999999999999@lid',
+        pn: '233241234567@c.us'
+      }
+    ]
+  };
+
+  const resolver = createIdentityResolver(client);
+
+  const result = await resolver.resolve('123456789012345@lid');
+
+  assert.equal(result, null);
+});
