@@ -4,7 +4,33 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const Module = require('node:module');
+function createMockCommandEngine(handle) {
+  return {
+    normalizeId(id) {
+      const value = String(id ?? '').trim().toLowerCase();
 
+      if (value.endsWith('@c.us')) {
+        return value.split('@')[0].replace(/\D/g, '');
+      }
+
+      if (value.endsWith('@lid')) {
+        return value;
+      }
+
+      return value.replace(/\D/g, '');
+    },
+
+    developerIds: new Set([
+      '233241234567',
+      '123456789012345@lid',
+      '987654321098765@lid'
+    ]),
+
+    deployerIds: new Set(),
+
+    handle
+  };
+}
 test('WhatsApp client uses a separate NexaBot authentication directory', () => {
   const originalLoad = Module._load;
   let capturedOptions;
