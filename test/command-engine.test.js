@@ -914,3 +914,16 @@ test('Command registration rejects non-string command names', () => {
     /Invalid command name/
   );
 });
+test('Command registration rejects non-string aliases', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'greet',
+      aliases: [123],
+      permission: 'public',
+      execute: async () => 'Invalid'
+    }),
+    /Invalid command alias/
+  );
+});
