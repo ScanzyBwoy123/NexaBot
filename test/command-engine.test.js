@@ -793,3 +793,9 @@ test('Command parser handles whitespace around the command', () => {
     args: ['John', 'Doe']
   });
 });
+test('Command parser rejects prefix followed only by whitespace', () => {
+  const engine = createEngine();
+
+  assert.equal(engine.parse('.   '), null);
+  assert.equal(engine.parse('.\t\n  '), null);
+});
