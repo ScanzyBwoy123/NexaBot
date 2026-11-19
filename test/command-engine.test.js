@@ -890,3 +890,15 @@ test('Command registration rejects missing execution functions', () => {
     /Invalid command registration/
   );
 });
+test('Command registration rejects invalid permission levels', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'invalidpermission',
+      permission: 'superadmin',
+      execute: async () => 'OK'
+    }),
+    /Invalid command registration/
+  );
+});
