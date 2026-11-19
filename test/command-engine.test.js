@@ -799,3 +799,15 @@ test('Command parser rejects prefix followed only by whitespace', () => {
   assert.equal(engine.parse('.   '), null);
   assert.equal(engine.parse('.\t\n  '), null);
 });
+test('Command registration rejects names containing special characters', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'hello@world',
+      permission: 'public',
+      execute: async () => 'Invalid'
+    }),
+    /Invalid command name/
+  );
+});
