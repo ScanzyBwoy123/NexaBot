@@ -299,3 +299,37 @@ test('WhatsApp message handler contains errors thrown by the error callback', as
 
   assert.equal(callbackCalled, true);
 });
+test('WhatsApp message handler preserves LID sender identities', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  const received = [];
+
+  const commandEngine = {
+    handle: async data => {
+      received.push(data);
+    }
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  const handler = client.listeners('message')[0];
+
+  await handler({
+    fromMe: false,
+    author: '123456789012345@lid',
+    from: '120363000000000000@g.us',
+    body: '.ping'
+  });
+
+  await handler({
+    fromMe: false,
+    from: '987654321098765@lid',
+    body: '.ping'
+  });
+
+  assert.equal(received.length, 2);
+  assert.equal(received[0].senderId, '123456789012345@lid');
+  assert.equal(received[1].senderId, '987654321098765@lid');
+});
