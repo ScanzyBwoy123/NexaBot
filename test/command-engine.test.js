@@ -1097,7 +1097,7 @@ test('Only the configured deployer can use deployer commands', async () => {
   assert.equal(deployerResult.ok, true);
   assert.equal(executions, 1);
 });
-test('Developers cannot use deployer commands unless they are also deployers', async () => {
+test('Developers can use deployer commands without being deployers', async () => {
   const engine = new CommandEngine({
     prefix: '.',
     developerIds: ['233200000001'],
@@ -1120,9 +1120,9 @@ test('Developers cannot use deployer commands unless they are also deployers', a
     senderId: '233200000001'
   });
 
-  assert.equal(result.ok, false);
-  assert.equal(result.code, 'DEPLOYER_ONLY');
-  assert.equal(executions, 0);
+  assert.equal(result.ok, true);
+  assert.equal(result.command, 'deployersettings');
+  assert.equal(executions, 1);
 });
 test('Deployers cannot execute developer-only commands', async () => {
   const engine = new CommandEngine({
