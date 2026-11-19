@@ -10,8 +10,10 @@ function createIdentityResolver(client) {
       return null;
     }
 
+    const requestedId = userId.trim().toLowerCase();
+
     try {
-      const results = await client.getContactLidAndPhone([userId.trim()]);
+      const results = await client.getContactLidAndPhone([requestedId]);
 
       if (!Array.isArray(results) || results.length !== 1) {
         return null;
@@ -22,17 +24,24 @@ function createIdentityResolver(client) {
       if (
         !result ||
         typeof result.lid !== 'string' ||
-        typeof result.pn !== 'string' ||
-        !result.lid.trim() ||
-        !result.pn.trim()
+        typeof result.pn !== 'string'
       ) {
         return null;
       }
 
-      return {
-        lid: result.lid.trim().toLowerCase(),
-        pn: result.pn.trim().toLowerCase()
-      };
+      const lid = result.lid.trim().toLowerCase();
+      const pn = result.pn.trim().toLowerCase();
+
+      if (!lid || !pn) {
+        return null;
+      }
+
+      // Only accept a mapping that matches the requested identity.
+      if (requestedId !== lid && requestedId !== pn) {
+        return null;
+      }
+
+      return { lid, pn };
     } catch {
       return null;
     }
