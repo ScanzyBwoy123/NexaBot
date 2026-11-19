@@ -1151,33 +1151,54 @@ test('Deployers cannot execute developer-only commands', async () => {
   assert.equal(result.code, 'DEVELOPER_ONLY');
   assert.equal(executions, 0);
 });
-test('createNexaBot registers commands and enforces deployer permissions', async () => {
+test('createNexaBot gives developers full access to all command permissions', async () => {
   const { createNexaBot } = require('../src/index');
 
-  const DEPLOYER_ID = '233241234567';
+  const DEVELOPER_ID = '233200000001';
+  const DEPLOYER_ID = '233200000002';
 
   const engine = createNexaBot({
     prefix: '.',
+    developerIds: [DEVELOPER_ID],
     deployerIds: [DEPLOYER_ID]
   });
 
-  assert.equal(engine.list().length, 26);
+  engine.register({
+    name: 'devcheck',
+    permission: 'developer',
+    execute: async () => 'Developer access granted'
+  });
 
-  const allowed = await engine.handle({
+  assert.equal(engine.list().length, 27);
+
+  const developerDeployerCommand = await engine.handle({
+    text: '.ping',
+    senderId: DEVELOPER_ID
+  });
+
+  assert.equal(developerDeployerCommand.ok, true);
+
+  const developerOnlyCommand = await engine.handle({
+    text: '.devcheck',
+    senderId: DEVELOPER_ID
+  });
+
+  assert.equal(developerOnlyCommand.ok, true);
+
+  const deployerCommand = await engine.handle({
     text: '.ping',
     senderId: DEPLOYER_ID
   });
 
-  assert.equal(allowed.ok, true);
-  assert.equal(allowed.command, 'ping');
+  assert.equal(deployerCommand.ok, true);
 
-  const denied = await engine.handle({
-    text: '.ping',
-    senderId: '233501234567'
+  const deployerDenied = await engine.handle({
+    text: '.devcheck',
+    senderId: DEPLOYER_ID
   });
 
-  assert.equal(denied.ok, false);
-  assert.equal(denied.code, 'DEPLOYER_ONLY');
+  assert.equal(deployerDenied.ok, false);
+  assert.equal(deployerDenied.code, 'DEVELOPER_ONLY');
 });
 test('WhatsApp phone IDs and LID IDs remain distinguishable', () => {
   const engine = createEngine();
