@@ -713,3 +713,13 @@ test('Command parser supports escaped backslashes inside quoted arguments', () =
     args: ['C:\\Users\\John']
   });
 });
+test('Command parser supports escaped single quotes inside single-quoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse(".greet 'John\\'s phone'");
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ["John's phone"]
+  });
+});
