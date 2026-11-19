@@ -11,7 +11,7 @@ const OWNER_ID = '233241234567';
 function createEngine() {
   return new CommandEngine({
     prefix: '.',
-    deployerIds: [OWNER_ID],
+    deployerId: OWNER_ID,
     commands: createCommands()
   });
 }
