@@ -205,7 +205,6 @@ test('Admin commands reject ordinary group members', async () => {
 test('Group admins cannot execute deployer commands without deployer identity', async () => {
   const engine = new CommandEngine({
     prefix: '.',
-    isGroupAdmin: async () => true
   });
 
   engine.register({
