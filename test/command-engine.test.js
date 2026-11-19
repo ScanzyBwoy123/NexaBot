@@ -594,3 +594,13 @@ test('Command parser preserves empty quoted arguments', () => {
     args: ['', 'hello']
   });
 });
+test('Command parser handles single-quoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse(".test 'John Doe'");
+
+  assert.deepEqual(result, {
+    name: 'test',
+    args: ['John Doe']
+  });
+});
