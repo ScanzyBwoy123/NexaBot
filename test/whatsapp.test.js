@@ -319,11 +319,9 @@ test('WhatsApp message handler preserves LID sender identities', async () => {
   const client = new EventEmitter();
   const received = [];
 
-  const commandEngine = {
-    handle: async data => {
-      received.push(data);
-    }
-  };
+  const commandEngine = createMockCommandEngine(async data => {
+  received.push(data);
+});
 
   registerMessageHandler(client, commandEngine);
 
