@@ -743,3 +743,13 @@ test('Command parser preserves backslashes in unquoted arguments', () => {
     args: ['C:\\Users\\John']
   });
 });
+test('Command parser handles multiple spaces between arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.greet    John      Doe');
+
+  assert.deepEqual(result, {
+    name: 'greet',
+    args: ['John', 'Doe']
+  });
+});
