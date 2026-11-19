@@ -62,6 +62,11 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
     throw new Error('Invalid command engine.');
   }
 
+  const identityResolver =
+    typeof client.getContactLidAndPhone === 'function'
+      ? createIdentityResolver(client)
+      : null;
+
   client.on('message', async message => {
     if (!message || message.fromMe) {
       return;
@@ -74,9 +79,24 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
     }
 
     try {
+      let commandSenderId = senderId;
+
+      if (
+        typeof senderId === 'string' &&
+        senderId.toLowerCase().endsWith('@lid') &&
+        identityResolver
+      ) {
+        const resolved = await identityResolver.resolve(senderId);
+
+        if (resolved) {
+          commandSenderId = resolved.pn;
+        }
+      }
+
       await commandEngine.handle({
         text: message.body,
-        senderId,
+        senderId: commandSenderId,
+        originalSenderId: senderId,
         chatId: message.from,
         message,
         reply: async response => message.reply(response)
