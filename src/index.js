@@ -1,18 +1,33 @@
 'use strict';
-
 const { CommandEngine } = require('./core/commandEngine');
 const { buildCommands } = require('./commands');
-
 function createNexaBot(options = {}) {
-  const ownerIds = options.ownerIds ?? (process.env.OWNER_IDS ?? '').split(',').filter(Boolean);
+  const ownerIds =
+    options.ownerIds ??
+    (process.env.OWNER_IDS ?? '')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean);
+  const developerIds =
+    options.developerIds ??
+    (process.env.DEVELOPER_IDS ?? '')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean);
   const engine = new CommandEngine({
     prefix: options.prefix ?? process.env.COMMAND_PREFIX ?? '.',
     ownerIds,
+    developerIds,
     isGroupAdmin: options.isGroupAdmin,
     logger: options.logger
   });
-  for (const command of buildCommands()) engine.register(command);
+  for (const command of buildCommands()) {
+    engine.register(command);
+  }
   return engine;
 }
-
-module.exports = { CommandEngine, createNexaBot, buildCommands };
+module.exports = {
+  CommandEngine,
+  createNexaBot,
+  buildCommands
+};
