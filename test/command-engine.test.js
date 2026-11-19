@@ -1248,3 +1248,60 @@ test('LID identity cannot inherit matching phone-number developer permissions', 
   assert.equal(lidResult.code, 'DEVELOPER_ONLY');
   assert.equal(executions, 1);
 });
+test('createNexaBot reads developer and deployer IDs from environment variables', async () => {
+  const { createNexaBot } = require('../src/index');
+
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerIds = process.env.DEPLOYER_IDS;
+
+  try {
+    process.env.DEVELOPER_IDS = '233200000001';
+    process.env.DEPLOYER_IDS = '233200000002';
+
+    const engine = createNexaBot({ prefix: '.' });
+
+    let developerExecutions = 0;
+
+    engine.register({
+      name: 'devcheck',
+      permission: 'developer',
+      execute: async () => {
+        developerExecutions++;
+        return 'Developer access granted';
+      }
+    });
+
+    const developerResult = await engine.handle({
+      text: '.devcheck',
+      senderId: '233200000001@c.us'
+    });
+
+    const deployerResult = await engine.handle({
+      text: '.ping',
+      senderId: '233200000002@c.us'
+    });
+
+    assert.equal(developerResult.ok, true);
+    assert.equal(developerExecutions, 1);
+    assert.equal(deployerResult.ok, true);
+
+    const unauthorizedResult = await engine.handle({
+      text: '.devcheck',
+      senderId: '233200000002'
+    });
+
+    assert.equal(unauthorizedResult.code, 'DEVELOPER_ONLY');
+  } finally {
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerIds === undefined) {
+      delete process.env.DEPLOYER_IDS;
+    } else {
+      process.env.DEPLOYER_IDS = previousDeployerIds;
+    }
+  }
+});
