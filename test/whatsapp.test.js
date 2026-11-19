@@ -387,11 +387,9 @@ test('WhatsApp message handler preserves LID when identity lookup fails', async 
 
   let received;
 
-  registerMessageHandler(client, {
-    handle: async data => {
-      received = data;
-    }
-  });
+  registerMessageHandler(client, createMockCommandEngine(async data => {
+  received = data;
+}));
 
   await client.listeners('message')[0]({
     fromMe: false,
