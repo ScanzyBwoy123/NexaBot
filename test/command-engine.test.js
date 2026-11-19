@@ -1004,3 +1004,26 @@ test('Command registration rejects aliases that duplicate existing command names
     /Duplicate command or alias/
   );
 });
+test('Owner-only permissions cannot be bypassed with uppercase commands', async () => {
+  const engine = createEngine();
+
+  let executions = 0;
+
+  engine.register({
+    name: 'secretcheck',
+    permission: 'owner',
+    execute: async () => {
+      executions++;
+      return 'Access granted';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.SECRETCHECK',
+    senderId: '233501234567'
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'OWNER_ONLY');
+  assert.equal(executions, 0);
+});
