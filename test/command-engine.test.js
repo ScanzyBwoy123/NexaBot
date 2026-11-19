@@ -1037,6 +1037,19 @@ test('Owner-only permissions cannot be bypassed with uppercase commands', async 
     /Invalid permission/
   );
 });
+
+test('Command registration rejects admin permission', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'admincheck',
+      permission: 'admin',
+      execute: async () => 'Not allowed'
+    }),
+    /Invalid permission/
+  );
+});
   let executions = 0;
 
   engine.register({
