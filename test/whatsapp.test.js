@@ -255,11 +255,9 @@ test('WhatsApp message handler reports command-processing errors', async () => {
   let receivedError;
   let receivedMessage;
 
-  const commandEngine = {
-    handle: async () => {
-      throw expectedError;
-    }
-  };
+  const commandEngine = createMockCommandEngine(async () => {
+  throw expectedError;
+});
 
   registerMessageHandler(client, commandEngine, {
     onError: (error, message) => {
