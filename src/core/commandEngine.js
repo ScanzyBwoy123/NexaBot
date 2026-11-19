@@ -205,7 +205,7 @@ code: ‘DEVELOPER_ONLY’
 }
 }
 
-if (command.permission === 'deployer') {
+if (command.permission === 'developer') {
   if (!sender || !this.deployerIds.has(sender)) {
     await send('This command is restricted to the bot deployer.');
     return {
