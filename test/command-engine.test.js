@@ -330,7 +330,7 @@ test('Command registration rejects aliases containing spaces', () => {
     engine.register({
       name: 'greet',
       aliases: ['bad alias'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Hello'
     });
   }, /Invalid command alias/);
