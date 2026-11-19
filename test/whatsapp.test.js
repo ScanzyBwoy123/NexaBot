@@ -157,3 +157,39 @@ test('WhatsApp message handler uses message.from when message.author is missing'
   assert.equal(received.senderId, '233241234567@c.us');
   assert.equal(received.text, '.ping');
 });
+test('WhatsApp message handler sends replies through the original message', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  let received;
+
+  const commandEngine = {
+    handle: async data => {
+      received = data;
+    }
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  let replyText;
+
+  const message = {
+    fromMe: false,
+    from: '233241234567@c.us',
+    body: '.ping',
+    reply: async response => {
+      replyText = response;
+      return 'reply-sent';
+    }
+  };
+
+  const handler = client.listeners('message')[0];
+
+  await handler(message);
+
+  const result = await received.reply('Pong!');
+
+  assert.equal(replyText, 'Pong!');
+  assert.equal(result, 'reply-sent');
+});
