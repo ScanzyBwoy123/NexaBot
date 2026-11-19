@@ -1059,7 +1059,7 @@ test('Developer-only commands reject non-developers', async () => {
   assert.equal(developerResult.ok, true);
   assert.equal(executions, 1);
 });
-test('Group admins cannot use deployer commands unless they are the deployer', async () => {
+test('Only the configured deployer can use deployer commands', async () => {
   const DEPLOYER_ID = '233200000002';
   const GROUP_ADMIN_ID = '233501234567';
 
