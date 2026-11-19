@@ -226,7 +226,7 @@ if (command.permission === 'developer' && !isDeveloper) {
 if (
   command.permission === 'deployer' &&
   !isDeveloper &&
-  (!sender || !this.deployerIds.has(sender))
+(!sender || sender !== this.deployerId)
 ) {
   await send('This command is restricted to the bot deployer.');
 
