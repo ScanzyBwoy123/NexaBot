@@ -186,7 +186,7 @@ test('Admin commands reject ordinary group members', async () => {
 
   engine.register({
     name: 'admincmd',
-    permission: 'admin',
+    permission: 'deployer',
     execute: async () => {
       executions++;
       return 'Allowed';
@@ -199,7 +199,7 @@ test('Admin commands reject ordinary group members', async () => {
   });
 
   assert.equal(result.ok, false);
-  assert.equal(result.code, 'ADMIN_ONLY');
+  assert.equal(result.code, 'DEPLOYER_ONLY');
   assert.equal(executions, 0);
 });
 
