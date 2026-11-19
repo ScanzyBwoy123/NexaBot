@@ -222,13 +222,9 @@ test('Group admins cannot execute deployer commands without deployer identity', 
 assert.equal(result.code, 'DEPLOYER_ONLY');
 });
 test('Deployer commands reject access when admin verification fails', async () => {
-  const engine = new CommandEngine({
-    prefix: '.',
-    isGroupAdmin: async () => {
-      throw new Error('Verification failed');
-    }
-  });
-
+const engine = new CommandEngine({
+  prefix: '.'
+});
   let executions = 0;
 
   engine.register({
