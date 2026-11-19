@@ -834,3 +834,16 @@ test('Command registration accepts hyphens and underscores in names', () => {
     });
   });
 });
+test('Command registration rejects aliases containing special characters', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'greet',
+      aliases: ['hello@world'],
+      permission: 'public',
+      execute: async () => 'Invalid'
+    }),
+    /Invalid command alias/
+  );
+});
