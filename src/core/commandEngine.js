@@ -194,17 +194,18 @@ if (new Set(names).size !== names.length) {
     }
 
     const sender = this.normalizeId(senderId);
-    if (command.permission === 'developer') {
-  if (!sender || !this.developerIds.has(sender)) {
-    await send('This command is restricted to the NexaBot developer.');
-    return {
-      handled: true,
-      ok: false,
-      code: 'DEVELOPER_ONLY'
-    };
-  }
+    if (command.permission === ‘developer’) {
+if (!sender || !this.developerIds.has(sender)) {
+await send(‘This command is restricted to the NexaBot developer.’);
+return {
+handled: true,
+ok: false,
+code: ‘DEVELOPER_ONLY’
+};
 }
-    if (command.permission === 'deployer') {
+}
+
+if (command.permission === 'deployer') {
   if (!sender || !this.deployerIds.has(sender)) {
     await send('This command is restricted to the bot deployer.');
     return {
@@ -214,87 +215,54 @@ if (new Set(names).size !== names.length) {
     };
   }
 }
-    if (command.permission === 'owner') {
-      if (!sender || !this.ownerIds.has(sender)) {
-        await send('This command is restricted to the bot owner.');
-        return {
-          handled: true,
-          ok: false,
-          code: 'OWNER_ONLY'
-        };
-      }
-    }
-
-    if (command.permission === 'admin') {
-      let allowed = false;
-
-      try {
-        allowed = await this.isGroupAdmin(context);
-      } catch (error) {
-        allowed = false;
-      }
-
-      if (!allowed) {
-        await send('This command is restricted to group administrators.');
-        return {
-          handled: true,
-          ok: false,
-          code: 'ADMIN_ONLY'
-        };
-      }
-    }
-        const cooldownMs = command.cooldownMs || 0;
-    const cooldownKey = `${sender}:${command.name}`;
-    const lastUsed = this.cooldowns.get(cooldownKey);
+const cooldownMs = command.cooldownMs || 0;
+const cooldownKey = `${sender}:${command.name}`;
+const lastUsed = this.cooldowns.get(cooldownKey);
 const remaining = lastUsed === undefined
   ? 0
   : cooldownMs - (this.now() - lastUsed);
-    if (remaining > 0) {
-      const seconds = Math.ceil(remaining / 1000);
-
-      await send(`Please wait ${seconds} seconds before using this command again.`);
-
-      return {
-        handled: true,
-        ok: false,
-        code: 'COOLDOWN',
-        remainingMs: remaining
-      };
-    }
-    try {
-      const result = await command.execute({
-        ...context,
-        args: parsed.args,
-        command: command.name,
-        senderId: senderId
-      });
-            if (cooldownMs > 0) {
-        this.cooldowns.set(cooldownKey, this.now());
-      }
-      if (typeof result === 'string') {
-        await send(result);
-      } else if (result && result.message) {
-        await send(result.message);
-      }
-
-      return {
-        handled: true,
-        ok: true,
-        command: command.name,
-        result
-      };
-    } catch (error) {
-      this.logger.error('Command execution failed:', error);
-      await send('An error occurred while executing this command.');
-
-      return {
-        handled: true,
-        ok: false,
-        code: 'COMMAND_ERROR'
-      };
-    }
+if (remaining > 0) {
+  const seconds = Math.ceil(remaining / 1000);
+  await send(`Please wait ${seconds} seconds before using this command again.`);
+  return {
+    handled: true,
+    ok: false,
+    code: 'COOLDOWN',
+    remainingMs: remaining
+  };
+}
+try {
+  const result = await command.execute({
+    ...context,
+    args: parsed.args,
+    command: command.name,
+    senderId: senderId
+  });
+  if (cooldownMs > 0) {
+    this.cooldowns.set(cooldownKey, this.now());
   }
+  if (typeof result === 'string') {
+    await send(result);
+  } else if (result && result.message) {
+    await send(result.message);
+  }
+  return {
+    handled: true,
+    ok: true,
+    command: command.name,
+    result
+  };
+} catch (error) {
+  this.logger.error('Command execution failed:', error);
+  await send('An error occurred while executing this command.');
+  return {
+    handled: true,
+    ok: false,
+    code: 'COMMAND_ERROR'
+  };
+}
 
+}
   list() {
     return [...new Set(this.commands.values())].map(command => ({
       name: command.name,
