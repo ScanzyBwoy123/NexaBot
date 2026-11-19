@@ -537,7 +537,7 @@ test('Command aliases are registered case-insensitively', async () => {
 
   const result = await engine.handle({
     text: '.hello',
-    senderId: '233123456789'
+    senderId: OWNER_ID
   });
 
   assert.equal(result.ok, true);
