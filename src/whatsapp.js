@@ -99,9 +99,8 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
         commandEngine.developerIds.has(normalizedSender);
 
       const isDeployer =
-        normalizedSender &&
-        commandEngine.deployerIds.has(normalizedSender);
-
+  normalizedSender &&
+  normalizedSender === commandEngine.deployerId;
       // Reject all interactions from unauthorized users.
       if (!isDeveloper && !isDeployer) {
         return;
