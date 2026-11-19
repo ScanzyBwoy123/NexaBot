@@ -203,7 +203,7 @@ test('Admin commands reject ordinary group members', async () => {
   assert.equal(executions, 0);
 });
 
-test('Verified group admins can execute admin commands', async () => {
+test('Group admins cannot execute deployer commands without deployer identity', async () => {
   const engine = new CommandEngine({
     prefix: '.',
     isGroupAdmin: async () => true
@@ -211,7 +211,7 @@ test('Verified group admins can execute admin commands', async () => {
 
   engine.register({
     name: 'admincmd',
-    permission: 'admin',
+    permission: 'deployer',
     execute: async () => 'Admin access granted'
   });
 
@@ -220,7 +220,8 @@ test('Verified group admins can execute admin commands', async () => {
     senderId: '233501234567'
   });
 
-  assert.equal(result.ok, true);
+  assert.equal(result.ok, false);
+assert.equal(result.code, 'DEPLOYER_ONLY');
 });
 test('Admin commands reject access when admin verification fails', async () => {
   const engine = new CommandEngine({
