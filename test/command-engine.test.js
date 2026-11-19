@@ -649,7 +649,7 @@ test('Command execution handles mixed-case command names', async () => {
 
   const result = await engine.handle({
     text: '.PiNg',
-    senderId: '233501234567'
+    senderId: OWNER_ID
   });
 
   assert.equal(result.ok, true);
