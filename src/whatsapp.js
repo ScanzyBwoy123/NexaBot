@@ -86,5 +86,6 @@ function registerMessageHandler(client, commandEngine) {
 }
 module.exports = {
   createWhatsAppClient,
-  registerWhatsAppEvents
+  registerWhatsAppEvents,
+  registerMessageHandler
 };
