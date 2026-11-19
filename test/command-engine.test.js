@@ -48,7 +48,7 @@ test('Deployer commands reject unauthorized users', async () => {
   assert.equal(replies.length, 1);
 });
 
-test('Owner commands reject unauthorized users', async () => {
+test('Deployer commands reject unauthorized users', async () => {
   const engine = createEngine();
   const replies = [];
 
@@ -59,8 +59,8 @@ test('Owner commands reject unauthorized users', async () => {
   });
 
   assert.equal(result.ok, false);
-  assert.equal(result.code, 'OWNER_ONLY');
-  assert.match(replies[0], /owner/i);
+  assert.equal(result.code, 'DEPLOYER_ONLY');
+  assert.match(replies[0], /deployer/i);
 });
 
 test('Owner can execute owner-only commands', async () => {
