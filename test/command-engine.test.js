@@ -953,3 +953,16 @@ test('Command registration rejects empty aliases', () => {
     /Invalid command alias/
   );
 });
+test('Command registration rejects duplicate aliases within the same command', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'greet',
+      aliases: ['hello', 'HELLO'],
+      permission: 'public',
+      execute: async () => 'Invalid'
+    }),
+    /Duplicate command or alias/
+  );
+});
