@@ -190,7 +190,16 @@ if (new Set(names).size !== names.length) {
     }
 
     const sender = this.normalizeId(senderId);
-
+    if (command.permission === 'developer') {
+  if (!sender || !this.developerIds.has(sender)) {
+    await send('This command is restricted to the NexaBot developer.');
+    return {
+      handled: true,
+      ok: false,
+      code: 'DEVELOPER_ONLY'
+    };
+  }
+}
     if (command.permission === 'owner') {
       if (!sender || !this.ownerIds.has(sender)) {
         await send('This command is restricted to the bot owner.');
