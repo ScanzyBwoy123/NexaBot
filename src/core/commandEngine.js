@@ -54,7 +54,7 @@ if (
 ) {
   throw new Error('Invalid cooldown value.');
 }
-    if (!['public', 'owner', 'admin'].includes(command.permission)) {
+    if (!['public', 'owner', 'admin', 'developer'].includes(command.permission)) {
       throw new Error(`Invalid permission for ${name}.`);
     }
 
