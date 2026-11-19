@@ -638,7 +638,7 @@ test('Command execution handles uppercase command names', async () => {
 
   const result = await engine.handle({
     text: '.PING',
-    senderId: '233501234567'
+    senderId: OWNER_ID
   });
 
   assert.equal(result.ok, true);
