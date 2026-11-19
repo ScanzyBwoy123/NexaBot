@@ -856,7 +856,7 @@ test('Command registration accepts aliases with hyphens and underscores', () => 
     engine.register({
       name: 'greet',
       aliases: ['hello-world', 'hello_world'],
-      permission: 'public',
+      permission: 'deployer',
       execute: async () => 'Hello'
     });
   });
