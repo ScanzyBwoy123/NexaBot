@@ -101,17 +101,55 @@ if (new Set(names).size !== names.length) {
     return null;
   }
 
-  const parts = input.match(/"[^"]*"|'[^']*'|\S+/g) || [];
+  const parts = [];
+  let i = 0;
+
+  while (i < input.length) {
+    while (i < input.length && /\s/.test(input[i])) {
+      i++;
+    }
+
+    if (i >= input.length) break;
+
+    const quote = input[i];
+
+    if (quote === '"' || quote === "'") {
+      i++;
+      const start = i;
+
+      while (i < input.length && input[i] !== quote) {
+        i++;
+      }
+
+      if (i >= input.length) {
+        return null;
+      }
+
+      parts.push(input.slice(start, i));
+      i++;
+
+      if (i < input.length && !/\s/.test(input[i])) {
+        return null;
+      }
+    } else {
+      const start = i;
+
+      while (i < input.length && !/\s/.test(input[i])) {
+        i++;
+      }
+
+      parts.push(input.slice(start, i));
+    }
+  }
+
+  if (parts.length === 0) {
+    return null;
+  }
 
   const name = parts.shift().toLowerCase();
 
-  const args = parts.map(arg =>
-    arg.replace(/^["']|["']$/g, '')
-  );
-
-  return { name, args };
+  return { name, args: parts };
 }
-
   async handle(context = {}) {
     const { text, senderId, reply } = context;
 
