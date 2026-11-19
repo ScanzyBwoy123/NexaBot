@@ -286,11 +286,9 @@ test('WhatsApp message handler contains errors thrown by the error callback', as
 
   const client = new EventEmitter();
 
-  const commandEngine = {
-    handle: async () => {
-      throw new Error('Command processing failed');
-    }
-  };
+  const commandEngine = createMockCommandEngine(async () => {
+  throw new Error('Command processing failed');
+});
 
   let callbackCalled = false;
 
