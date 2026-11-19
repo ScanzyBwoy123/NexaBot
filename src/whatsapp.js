@@ -53,7 +53,7 @@ function registerWhatsAppEvents(client, handlers = {}) {
 
   return client;
 }
-function registerMessageHandler(client, commandEngine) {
+function registerMessageHandler(client, commandEngine, handlers = {}) {
   if (!client || typeof client.on !== 'function') {
     throw new Error('Invalid WhatsApp client.');
   }
@@ -73,13 +73,23 @@ function registerMessageHandler(client, commandEngine) {
       return;
     }
 
-    await commandEngine.handle({
-      text: message.body,
-      senderId,
-      chatId: message.from,
-      message,
-      reply: async response => message.reply(response)
-    });
+    try {
+      await commandEngine.handle({
+        text: message.body,
+        senderId,
+        chatId: message.from,
+        message,
+        reply: async response => message.reply(response)
+      });
+    } catch (error) {
+      if (typeof handlers.onError === 'function') {
+        try {
+          handlers.onError(error, message);
+        } catch {
+          // Prevent error-handler failures from escaping.
+        }
+      }
+    }
   });
 
   return client;
