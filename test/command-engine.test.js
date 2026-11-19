@@ -584,3 +584,13 @@ test('Command parser keeps quoted arguments together', async () => {
   assert.equal(result.ok, true);
   assert.deepEqual(receivedArgs, ['John Doe', 'Accra Ghana']);
 });
+test('Command parser preserves empty quoted arguments', () => {
+  const engine = createEngine();
+
+  const result = engine.parse('.test "" hello');
+
+  assert.deepEqual(result, {
+    name: 'test',
+    args: ['', 'hello']
+  });
+});
