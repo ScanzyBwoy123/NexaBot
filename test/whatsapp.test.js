@@ -193,3 +193,38 @@ test('WhatsApp message handler sends replies through the original message', asyn
   assert.equal(replyText, 'Pong!');
   assert.equal(result, 'reply-sent');
 });
+test('WhatsApp message handler propagates reply failures', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  let received;
+
+  const commandEngine = {
+    handle: async data => {
+      received = data;
+    }
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  const message = {
+    fromMe: false,
+    from: '233241234567@c.us',
+    body: '.ping',
+    reply: async () => {
+      throw new Error('WhatsApp reply failed');
+    }
+  };
+
+  const handler = client.listeners('message')[0];
+
+  await handler(message);
+
+  await assert.rejects(
+    received.reply('Pong!'),
+    {
+      message: 'WhatsApp reply failed'
+    }
+  );
+});
