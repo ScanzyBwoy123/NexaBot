@@ -164,7 +164,7 @@ test('Command cooldown blocks repeated execution', async () => {
   assert.equal(third.ok, true);
   assert.equal(executions, 2);
 });
-test('Owner commands reject missing sender IDs', async () => {
+test('Deployer commands reject missing sender IDs', async () => {
   const engine = createEngine();
 
   const result = await engine.handle({
@@ -172,7 +172,7 @@ test('Owner commands reject missing sender IDs', async () => {
   });
 
   assert.equal(result.ok, false);
-  assert.equal(result.code, 'OWNER_ONLY');
+  assert.equal(result.code, 'DEPLOYER_ONLY');
 });
 
 test('Admin commands reject ordinary group members', async () => {
