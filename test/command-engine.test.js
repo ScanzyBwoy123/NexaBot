@@ -493,7 +493,7 @@ test('Command registration rejects duplicate aliases regardless of case', () => 
 
   engine.register({
     name: 'first',
-    aliases: ['
+    aliases: ['hello'],
     permission: 'deployer',
     execute: async () => 'First'
   });
