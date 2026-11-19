@@ -1006,6 +1006,31 @@ test('Command registration rejects aliases that duplicate existing command names
     /Duplicate command or alias/
   );
 });
+test('Command registration rejects owner permission', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'ownercheck',
+      permission: 'owner',
+      execute: async () => 'Not allowed'
+    }),
+    /Invalid permission/
+  );
+});
+
+test('Command registration rejects admin permission', () => {
+  const engine = createEngine();
+
+  assert.throws(
+    () => engine.register({
+      name: 'admincheck',
+      permission: 'admin',
+      execute: async () => 'Not allowed'
+    }),
+    /Invalid permission/
+  );
+});
 test('Developer-only commands reject non-developers', async () => {
   const engine = new CommandEngine({
     prefix: '.',
