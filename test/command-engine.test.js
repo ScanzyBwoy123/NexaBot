@@ -1153,3 +1153,30 @@ test('Developers cannot use deployer commands unless they are also deployers', a
   assert.equal(result.code, 'DEPLOYER_ONLY');
   assert.equal(executions, 0);
 });
+test('Deployers cannot execute developer-only commands', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    developerIds: ['233200000001'],
+    deployerIds: ['233200000002']
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'devmaintenance',
+    permission: 'developer',
+    execute: async () => {
+      executions++;
+      return 'Developer access granted';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.devmaintenance',
+    senderId: '233200000002'
+  });
+
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'DEVELOPER_ONLY');
+  assert.equal(executions, 0);
+});
