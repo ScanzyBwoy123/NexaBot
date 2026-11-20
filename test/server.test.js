@@ -228,3 +228,55 @@ test('health endpoint rejects unsupported HTTP methods', async () => {
     }
   }
 });
+const { createRequestHandler } = require('../src/server');
+
+test('unexpected request errors return a safe 500 response', () => {
+  const handler = createRequestHandler();
+
+  const req = {
+    get method() {
+      throw new Error('Simulated internal failure');
+    }
+  };
+
+  let statusCode;
+  let responseBody;
+  let loggedError;
+
+  const res = {
+    headersSent: false,
+
+    writeHead(status) {
+      statusCode = status;
+      this.headersSent = true;
+    },
+
+    end(body) {
+      responseBody = body;
+    },
+
+    destroy() {
+      throw new Error('Response should not be destroyed');
+    }
+  };
+
+  const originalConsoleError = console.error;
+
+  try {
+    console.error = (...args) => {
+      loggedError = args.join(' ');
+    };
+
+    handler(req, res);
+  } finally {
+    console.error = originalConsoleError;
+  }
+
+  const data = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 500);
+  assert.equal(data.success, false);
+  assert.equal(data.error, 'Internal server error');
+  assert.ok(loggedError.includes('Simulated internal failure'));
+  assert.ok(!responseBody.includes('Simulated internal failure'));
+});
