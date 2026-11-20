@@ -434,7 +434,7 @@ test('Failed commands do not trigger cooldowns', async () => {
 
   const engine = new CommandEngine({
     prefix: '.',
-    deployerIds: [OWNER_ID],
+    deployerId: OWNER_ID,
     logger: { error: () => {} }
   });
 
