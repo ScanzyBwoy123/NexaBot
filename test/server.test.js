@@ -565,6 +565,7 @@ assert.match(
   /application\/json/
 );
 assert.equal(response.status, 200);
+assert.equal(data.success, true);
 assert.equal(data.status, 'healthy');
 assert.equal(data.service, 'NexaBot');
   } finally {
