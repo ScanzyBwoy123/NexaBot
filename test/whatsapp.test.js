@@ -1021,7 +1021,7 @@ test('NexaBot ignores its own generated replies to prevent infinite loops', asyn
 
   assert.equal(commandCalls, 1);
 });
-test('NexaBot does not ignore a genuine message just because its text matches a bot reply', async () => {
+test('NexaBot does not suppress a genuine message matching a pending bot reply', async () => {
   const { EventEmitter } = require('node:events');
   const { registerMessageHandler } = require('../src/whatsapp');
 
@@ -1033,14 +1033,18 @@ test('NexaBot does not ignore a genuine message just because its text matches a 
     }
   };
 
-  let commandCalls = 0;
+  const handledMessages = [];
 
   const commandEngine = {
     authorizer: {
       authorize: () => ({ allowed: true })
     },
-    handle: async () => {
-      commandCalls++;
+    handle: async context => {
+      handledMessages.push(context.message.id._serialized);
+
+      if (context.text === '.test') {
+        await context.reply('Bot response');
+      }
     }
   };
 
@@ -1066,7 +1070,20 @@ test('NexaBot does not ignore a genuine message just because its text matches a 
 
   await new Promise(resolve => setImmediate(resolve));
 
-  assert.equal(commandCalls, 2);
+  client.emit('message_create', {
+    id: { _serialized: 'bot-generated-reply' },
+    fromMe: true,
+    from: '233240000888@c.us',
+    body: 'Bot response',
+    reply: async () => {}
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.deepEqual(handledMessages, [
+    'original-command',
+    'genuine-message'
+  ]);
 });
 test('startWhatsApp initializes the client and registers handlers', async () => {
   const { EventEmitter } = require('node:events');
