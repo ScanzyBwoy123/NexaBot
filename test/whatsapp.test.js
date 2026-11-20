@@ -739,6 +739,52 @@ test('NexaBot deployer can use commands from their own WhatsApp inbox', async ()
   assert.equal(replies.length, 1);
   assert.match(replies[0], /menu: This feature is not connected yet/i);
 });
+test('NexaBot ignores its own generated replies to prevent infinite loops', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+
+  client.info = {
+    wid: {
+      _serialized: '233240000888@c.us'
+    }
+  };
+
+  let commandCalls = 0;
+
+  const commandEngine = {
+    authorizer: {
+      authorize: () => ({ allowed: true })
+    },
+    handle: async context => {
+      commandCalls++;
+      await context.reply('Bot response');
+    }
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  client.emit('message_create', {
+    id: { _serialized: 'loop-test-message' },
+    fromMe: true,
+    from: '233240000888@c.us',
+    body: '.test',
+    reply: async response => {
+      client.emit('message_create', {
+        id: { _serialized: 'bot-generated-reply' },
+        fromMe: true,
+        from: '233240000888@c.us',
+        body: response,
+        reply: async () => {}
+      });
+    }
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(commandCalls, 1);
+});
 test('startWhatsApp initializes the client and registers handlers', async () => {
   const { EventEmitter } = require('node:events');
   const Module = require('node:module');
