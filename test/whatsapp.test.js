@@ -462,3 +462,25 @@ test('WhatsApp message handler rejects an unrelated identity mapping', async () 
   assert.equal(received.senderId, '123456789012345@lid');
   assert.notEqual(received.senderId, '233241234567@c.us');
 });
+test('WhatsApp message handler blocks unauthorized users', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  let commandExecuted = false;
+
+  const commandEngine = createMockCommandEngine(async () => {
+    commandExecuted = true;
+  });
+
+  registerMessageHandler(client, commandEngine);
+
+  await client.listeners('message')[0]({
+    fromMe: false,
+    author: '233240000999@c.us',
+    from: '233240000999@c.us',
+    body: '.menu'
+  });
+
+  assert.equal(commandExecuted, false);
+});
