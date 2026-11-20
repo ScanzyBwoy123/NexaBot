@@ -137,3 +137,48 @@ test('health endpoint returns a healthy response', async () => {
     }
   }
 });
+test('unknown routes return a 404 response', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+
+  let server;
+
+  try {
+    ({ server } = startServer({ port: 0 }));
+
+    await once(server, 'listening');
+
+    const address = server.address();
+
+    const response = await fetch(
+      `http://127.0.0.1:${address.port}/unknown`
+    );
+
+    const data = await response.json();
+
+    assert.equal(response.status, 404);
+    assert.equal(data.success, false);
+    assert.equal(data.error, 'Not found');
+  } finally {
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
