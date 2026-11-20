@@ -120,6 +120,60 @@ test('WhatsApp client uses a separate NexaBot authentication directory', () => {
     delete require.cache[require.resolve('../src/whatsapp')];
   }
 });
+test('WhatsApp client configures phone-number pairing correctly', () => {
+  const originalLoad = Module._load;
+  const previousNumber = process.env.WHATSAPP_PAIRING_NUMBER;
+  let capturedOptions;
+
+  class MockLocalAuth {
+    constructor(options) {
+      this.options = options;
+    }
+  }
+
+  class MockClient {
+    constructor(options) {
+      capturedOptions = options;
+    }
+  }
+
+  try {
+    process.env.WHATSAPP_PAIRING_NUMBER = '+233241234567';
+
+    Module._load = function (request, parent, isMain) {
+      if (request === 'whatsapp-web.js') {
+        return {
+          Client: MockClient,
+          LocalAuth: MockLocalAuth
+        };
+      }
+
+      return originalLoad.call(this, request, parent, isMain);
+    };
+
+    const modulePath = require.resolve('../src/whatsapp');
+    delete require.cache[modulePath];
+
+    const { createWhatsAppClient } = require('../src/whatsapp');
+
+    createWhatsAppClient();
+
+    assert.deepEqual(capturedOptions.pairWithPhoneNumber, {
+      phoneNumber: '233241234567',
+      showNotification: true
+    });
+  } finally {
+    Module._load = originalLoad;
+
+    if (previousNumber === undefined) {
+      delete process.env.WHATSAPP_PAIRING_NUMBER;
+    } else {
+      process.env.WHATSAPP_PAIRING_NUMBER = previousNumber;
+    }
+
+    delete require.cache[require.resolve('../src/whatsapp')];
+  }
+});
 test('WhatsApp event handlers respond to all five connection events', () => {
   const { EventEmitter } = require('node:events');
   const { registerWhatsAppEvents } = require('../src/whatsapp');
