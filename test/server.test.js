@@ -452,6 +452,11 @@ test('server shuts down gracefully', async () => {
     assert.equal(server.listening, true);
 
     const closed = once(server, 'close');
+    let closeEventCount = 0;
+
+server.on('close', () => {
+  closeEventCount += 1;
+});
     server.close();
     await closed;
 
