@@ -280,3 +280,31 @@ test('unexpected request errors return a safe 500 response', () => {
   assert.ok(loggedError.includes('Simulated internal failure'));
   assert.ok(!responseBody.includes('Simulated internal failure'));
 });
+test('server rejects invalid port configurations', () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+
+  try {
+    for (const port of [-1, 65536, 3.5, 'invalid']) {
+      assert.throws(
+        () => validateConfiguration({ port }),
+        /Invalid server port/
+      );
+    }
+  } finally {
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
