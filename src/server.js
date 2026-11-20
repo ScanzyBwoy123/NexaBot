@@ -27,15 +27,8 @@ function validateConfiguration(options = {}) {
   return { developerIds, deployerId, port };
 }
 
-function startServer(options = {}) {
-  const config = validateConfiguration(options);
-
-  const bot = createNexaBot({
-    developerIds: config.developerIds,
-    deployerId: config.deployerId
-  });
-
-  const server = http.createServer((req, res) => {
+function createRequestHandler() {
+  return (req, res) => {
     try {
       if (req.method === 'GET' && req.url === '/health') {
         res.writeHead(200, {
@@ -77,7 +70,18 @@ function startServer(options = {}) {
         res.destroy();
       }
     }
+  };
+}
+
+function startServer(options = {}) {
+  const config = validateConfiguration(options);
+
+  const bot = createNexaBot({
+    developerIds: config.developerIds,
+    deployerId: config.deployerId
   });
+
+  const server = http.createServer(createRequestHandler());
 
   server.listen(config.port, () => {
     console.log(
@@ -100,5 +104,6 @@ if (require.main === module) {
 
 module.exports = {
   startServer,
-  validateConfiguration
+  validateConfiguration,
+  createRequestHandler
 };
