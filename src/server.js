@@ -102,7 +102,8 @@ function startServer(options = {}) {
     console.log(`Registered commands: ${bot.list().length}`);
   });
 
-  return { server, bot };
+    return { server, bot };
+}
 
 if (require.main === module) {
   try {
