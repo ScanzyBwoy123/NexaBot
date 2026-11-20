@@ -119,6 +119,34 @@ if (!access || !access.allowed) {
 
   return client;
 }
+async function startWhatsApp(options = {}) {
+  const commandEngine = options.commandEngine;
+
+  if (!commandEngine || typeof commandEngine.handle !== 'function') {
+    throw new Error('Invalid command engine.');
+  }
+
+  const client = createWhatsAppClient(options);
+
+  registerWhatsAppEvents(client, options);
+  registerMessageHandler(client, commandEngine, options);
+
+  try {
+    await client.initialize();
+  } catch (error) {
+    if (typeof options.onError === 'function') {
+      try {
+        options.onError(error);
+      } catch {
+        // Prevent error-handler failures from escaping.
+      }
+    }
+
+    throw error;
+  }
+
+  return client;
+}
 module.exports = {
   createWhatsAppClient,
   registerWhatsAppEvents,
