@@ -32,7 +32,7 @@ test('server requires at least one developer ID', () => {
   }
 });
 
-test('server requires a deployer ID', () => {
+test('server allows developer configuration without a deployer ID', () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
   const previousDeployerId = process.env.DEPLOYER_ID;
 
@@ -40,10 +40,10 @@ test('server requires a deployer ID', () => {
     process.env.DEVELOPER_IDS = '233241234567';
     process.env.DEPLOYER_ID = '';
 
-    assert.throws(
-      () => validateConfiguration(),
-      /DEPLOYER_ID must be configured/
-    );
+    const config = validateConfiguration();
+
+    assert.deepEqual(config.developerIds, ['233241234567']);
+    assert.equal(config.deployerId, '');
   } finally {
     if (previousDeveloperIds === undefined) {
       delete process.env.DEVELOPER_IDS;
