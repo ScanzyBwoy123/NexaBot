@@ -768,6 +768,34 @@ test('NexaBot deployer inbox commands stay isolated to their own bot instance', 
   assert.equal(botB.replies.length, 0);
   assert.match(botA.replies[0], /menu: This feature is not connected yet/i);
 });
+test('NexaBot processes a WhatsApp message through to its final reply', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+  const { createNexaBot } = require('../src');
+
+  const client = new EventEmitter();
+  const replies = [];
+
+  const commandEngine = createNexaBot({
+    developerIds: ['233241234567'],
+    deployerId: '233240000888'
+  });
+
+  registerMessageHandler(client, commandEngine);
+
+  client.emit('message', {
+    fromMe: false,
+    author: '233241234567@c.us',
+    from: '233241234567@c.us',
+    body: '.menu',
+    reply: async response => replies.push(response)
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(replies.length, 1);
+  assert.match(replies[0], /menu: This feature is not connected yet/i);
+});
 test('NexaBot developer can use commands from their own WhatsApp inbox', async () => {
   const { EventEmitter } = require('node:events');
   const { registerMessageHandler } = require('../src/whatsapp');
