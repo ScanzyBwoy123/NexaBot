@@ -370,3 +370,29 @@ test('server refuses to start without a deployer identity', () => {
     }
   }
 });
+test('server refuses to start without a developer identity', () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  try {
+    process.env.DEVELOPER_IDS = '';
+    process.env.DEPLOYER_ID = '233240000888';
+
+    assert.throws(
+      () => startServer({ port: 0 }),
+      /DEVELOPER_IDS must be configured/
+    );
+  } finally {
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
