@@ -67,7 +67,45 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
       ? createIdentityResolver(client)
       : null;
 
-  const pendingBotReplies = new Map();
+  const suppressedMessageIds = new Set();
+  const suppressedTimers = new Map();
+
+  let pendingReplyCount = 0;
+  const bufferedOutgoingMessages = [];
+
+  function rememberSuppressedMessage(messageId) {
+    if (!messageId) {
+      return;
+    }
+
+    suppressedMessageIds.add(messageId);
+
+    const timer = setTimeout(() => {
+      suppressedMessageIds.delete(messageId);
+      suppressedTimers.delete(messageId);
+    }, 60000);
+
+    suppressedTimers.set(messageId, timer);
+  }
+
+  function isSuppressedMessage(message) {
+    const messageId = message?.id?._serialized;
+
+    if (!messageId || !suppressedMessageIds.has(messageId)) {
+      return false;
+    }
+
+    suppressedMessageIds.delete(messageId);
+
+    const timer = suppressedTimers.get(messageId);
+
+    if (timer) {
+      clearTimeout(timer);
+      suppressedTimers.delete(messageId);
+    }
+
+    return true;
+  }
 
   async function processMessage(message, isOutgoing = false) {
     if (!message || typeof message.body !== 'string') {
@@ -89,15 +127,6 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
       : message.author || message.from;
 
     if (!senderId) {
-      return;
-    }
-
-    const replyKey = `${chatId}:${message.body}`;
-
-    if (isOutgoing && pendingBotReplies.has(replyKey)) {
-      const timer = pendingBotReplies.get(replyKey);
-      clearTimeout(timer);
-      pendingBotReplies.delete(replyKey);
       return;
     }
 
@@ -129,20 +158,30 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
         chatId,
         message,
         reply: async response => {
-          const key = `${chatId}:${response}`;
-
-          const timer = setTimeout(() => {
-            pendingBotReplies.delete(key);
-          }, 15000);
-
-          pendingBotReplies.set(key, timer);
+          pendingReplyCount++;
 
           try {
-            return await message.reply(response);
-          } catch (error) {
-            clearTimeout(timer);
-            pendingBotReplies.delete(key);
-            throw error;
+            const sentMessage = await message.reply(response);
+
+            const sentMessageId = sentMessage?.id?._serialized;
+
+            if (sentMessageId) {
+              rememberSuppressedMessage(sentMessageId);
+            }
+
+            return sentMessage;
+          } finally {
+            pendingReplyCount--;
+
+            if (pendingReplyCount === 0) {
+              const buffered = bufferedOutgoingMessages.splice(0);
+
+              for (const outgoingMessage of buffered) {
+                if (!isSuppressedMessage(outgoingMessage)) {
+                  void processMessage(outgoingMessage, true);
+                }
+              }
+            }
           }
         }
       });
@@ -162,8 +201,22 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
   });
 
   client.on('message_create', message => {
+    if (!message || !message.fromMe) {
+      return;
+    }
+
+    if (pendingReplyCount > 0) {
+      bufferedOutgoingMessages.push(message);
+      return;
+    }
+
+    if (isSuppressedMessage(message)) {
+      return;
+    }
+
     return processMessage(message, true);
-  });  
+  });
+
   return client;
 }
 async function startWhatsApp(options = {}) {
