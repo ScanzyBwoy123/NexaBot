@@ -131,7 +131,7 @@ test('Command cooldown blocks repeated execution', async () => {
 
   const engine = new CommandEngine({
     prefix: '.',
-    deployerIds: [OWNER_ID],
+   deployerId: OWNER_ID,
     now: () => now
   });
 
