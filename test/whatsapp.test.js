@@ -781,3 +781,57 @@ test('startWhatsApp reports initialization errors and rethrows them', async () =
 
   assert.equal(reportedError, startupError);
 });
+test('startWhatsApp preserves startup errors when onError throws', async () => {
+  const { EventEmitter } = require('node:events');
+  const Module = require('node:module');
+
+  const startupError = new Error('WhatsApp initialization failed');
+
+  class MockClient extends EventEmitter {
+    async initialize() {
+      throw startupError;
+    }
+  }
+
+  class MockLocalAuth {}
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: MockClient,
+        LocalAuth: MockLocalAuth
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  await assert.rejects(
+    startWhatsApp({
+      commandEngine: {
+        handle: async () => {},
+        authorizer: {
+          authorize: () => ({ allowed: true })
+        }
+      },
+      onError: () => {
+        throw new Error('Error callback failed');
+      }
+    }),
+    error => error === startupError
+  );
+});
