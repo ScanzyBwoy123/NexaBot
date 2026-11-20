@@ -1295,3 +1295,66 @@ test('startWhatsApp handles lifecycle events in the correct order', async () => 
     'disconnected'
   ]);
 });
+test('startWhatsApp keeps the message handler active after ready', async () => {
+  const { EventEmitter } = require('node:events');
+  const Module = require('node:module');
+
+  class MockClient extends EventEmitter {
+    async initialize() {}
+  }
+
+  class MockLocalAuth {}
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: MockClient,
+        LocalAuth: MockLocalAuth
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  const receivedMessages = [];
+
+  const client = await startWhatsApp({
+    commandEngine: {
+      handle: async message => {
+        receivedMessages.push(message.body);
+      },
+      authorizer: {
+        authorize: () => ({ allowed: true })
+      }
+    }
+  });
+
+  client.emit('ready');
+
+  const message = {
+    from: '233241234567@c.us',
+    body: 'Hello NexaBot',
+    fromMe: false,
+    reply: async () => {}
+  };
+
+  client.emit('message', message);
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.deepEqual(receivedMessages, ['Hello NexaBot']);
+});
