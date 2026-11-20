@@ -508,6 +508,17 @@ test('server reports a port conflict safely', async () => {
 
     assert.equal(error.code, 'EADDRINUSE');
     assert.equal(firstServer.listening, true);
+    const address = firstServer.address();
+
+const response = await fetch(
+  `http://127.0.0.1:${address.port}/health`
+);
+
+const data = await response.json();
+
+assert.equal(response.status, 200);
+assert.equal(data.status, 'healthy');
+assert.equal(data.service, 'NexaBot');
   } finally {
     for (const server of [secondServer, firstServer]) {
       if (server?.listening) {
