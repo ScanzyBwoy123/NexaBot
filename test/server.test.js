@@ -559,6 +559,7 @@ const response = await fetch(
 
 const data = await response.json();
 
+assert.equal(response.headers.get('cache-control'), 'no-store'); 
 assert.equal(response.status, 200);
 assert.equal(data.status, 'healthy');
 assert.equal(data.service, 'NexaBot');
