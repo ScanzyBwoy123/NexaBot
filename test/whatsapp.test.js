@@ -621,3 +621,47 @@ test('real NexaBot instances enforce separate deployer identities', async () => 
   assert.equal(botB.replies.length, 1);
   assert.match(botB.replies[0], /menu: This feature is not connected yet/i);
 });
+test('NexaBot developer has access to every bot instance', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+  const { createNexaBot } = require('../src');
+
+  function createInstance(deployerId) {
+    const client = new EventEmitter();
+    const replies = [];
+
+    const commandEngine = createNexaBot({
+      developerIds: ['233241234567'],
+      deployerId
+    });
+
+    registerMessageHandler(client, commandEngine);
+
+    return { client, replies };
+  }
+
+  const botA = createInstance('233240000888');
+  const botB = createInstance('233240000777');
+
+  const developerMessage = {
+    fromMe: false,
+    author: '233241234567@c.us',
+    from: '233241234567@c.us',
+    body: '.menu'
+  };
+
+  await botA.client.listeners('message')[0]({
+    ...developerMessage,
+    reply: async response => botA.replies.push(response)
+  });
+
+  await botB.client.listeners('message')[0]({
+    ...developerMessage,
+    reply: async response => botB.replies.push(response)
+  });
+
+  assert.equal(botA.replies.length, 1);
+  assert.equal(botB.replies.length, 1);
+  assert.match(botA.replies[0], /menu: This feature is not connected yet/i);
+  assert.match(botB.replies[0], /menu: This feature is not connected yet/i);
+});
