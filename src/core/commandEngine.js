@@ -195,10 +195,9 @@ if (new Set(names).size !== names.length) {
       };
     }
 
-    const sender = this.normalizeId(senderId);
-const isDeveloper = Boolean(
-  sender && this.developerIds.has(sender)
-);
+    const access = this.authorizer.authorize(senderId);
+const sender = access.sender;
+const isDeveloper = access.isDeveloper;
 
 // Developer has full access to every command.
 if (command.permission === 'developer' && !isDeveloper) {
@@ -211,12 +210,11 @@ if (command.permission === 'developer' && !isDeveloper) {
   };
 }
 
-// Deployers can use deployer commands.
-// Developers can also use these commands.
+// Developers and the registered deployer can use deployer commands.
 if (
   command.permission === 'deployer' &&
-  !isDeveloper &&
-(!sender || sender !== this.deployerId)
+  !access.isDeveloper &&
+  !access.isDeployer
 ) {
   await send('This command is restricted to the bot deployer.');
 
