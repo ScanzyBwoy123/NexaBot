@@ -68,3 +68,36 @@ test('empty and invalid identities are rejected', () => {
   assert.equal(authorizer.authorize(null).allowed, false);
   assert.equal(authorizer.authorize('unknown').allowed, false);
 });
+test('NexaBot loads developer and deployer identities from environment variables', () => {
+  const { createNexaBot } = require('../src');
+
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  try {
+    process.env.DEVELOPER_IDS = '233241234567@c.us';
+    process.env.DEPLOYER_ID = '233240000888@c.us';
+
+    const bot = createNexaBot();
+
+    const developer = bot.authorizer.authorize('233241234567');
+    const deployer = bot.authorizer.authorize('233240000888');
+    const unauthorized = bot.authorizer.authorize('233240000999');
+
+    assert.equal(developer.role, 'developer');
+    assert.equal(deployer.role, 'deployer');
+    assert.equal(unauthorized.allowed, false);
+  } finally {
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
