@@ -609,6 +609,7 @@ test('server handles unexpected errors without an error callback', async () => {
     });
 
     assert.equal(server.listening, true);
+    assert.equal(process.exitCode, undefined);
   } finally {
     if (server?.listening) {
       const closed = once(server, 'close');
