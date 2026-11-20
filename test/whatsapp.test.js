@@ -1334,9 +1334,10 @@ test('startWhatsApp keeps the message handler active after ready', async () => {
 
   const client = await startWhatsApp({
     commandEngine: {
-      handle: async message => {
-        receivedMessages.push(message.body);
-      },
+    handle: async input => {
+  receivedMessages.push(input.text);
+},  
+      
       authorizer: {
         authorize: () => ({ allowed: true })
       }
