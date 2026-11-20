@@ -1326,67 +1326,55 @@ test('createNexaBot reads developer and deployer IDs from environment variables'
 }   
   }
 });
-test('createNexaBot supports multiple comma-separated developer and deployer IDs', async () => {
+test('each bot instance accepts only its own deployer', async () => {
   const { createNexaBot } = require('../src/index');
 
-  const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousDeployerIds = process.env.DEPLOYER_IDS;
+  const botA = createNexaBot({
+    prefix: '.',
+    deployerId: '233200000021'
+  });
 
-  try {
-    process.env.DEVELOPER_IDS = '233200000011, 233200000012';
-    process.env.DEPLOYER_IDS = '233200000021, 233200000022';
+  const botB = createNexaBot({
+    prefix: '.',
+    deployerId: '233200000022'
+  });
 
-    const engine = createNexaBot({ prefix: '.' });
+  botA.register({
+    name: 'instancecheck',
+    permission: 'deployer',
+    execute: async () => 'Bot A access granted'
+  });
 
-    let executions = 0;
+  botB.register({
+    name: 'instancecheck',
+    permission: 'deployer',
+    execute: async () => 'Bot B access granted'
+  });
 
-    engine.register({
-      name: 'devcheck',
-      permission: 'developer',
-      execute: async () => {
-        executions++;
-        return 'Developer access granted';
-      }
-    });
+  const resultA = await botA.handle({
+    text: '.instancecheck',
+    senderId: '233200000021@c.us'
+  });
 
-    for (const senderId of [
-      '233200000011@c.us',
-      '233200000012@c.us'
-    ]) {
-      const result = await engine.handle({
-        text: '.devcheck',
-        senderId
-      });
+  const resultB = await botB.handle({
+    text: '.instancecheck',
+    senderId: '233200000022@c.us'
+  });
 
-      assert.equal(result.ok, true);
-    }
+  const crossAccessA = await botA.handle({
+    text: '.instancecheck',
+    senderId: '233200000022@c.us'
+  });
 
-    for (const senderId of [
-      '233200000021@c.us',
-      '233200000022@c.us'
-    ]) {
-      const result = await engine.handle({
-        text: '.ping',
-        senderId
-      });
+  const crossAccessB = await botB.handle({
+    text: '.instancecheck',
+    senderId: '233200000021@c.us'
+  });
 
-      assert.equal(result.ok, true);
-    }
-
-    assert.equal(executions, 2);
-  } finally {
-    if (previousDeveloperIds === undefined) {
-      delete process.env.DEVELOPER_IDS;
-    } else {
-      process.env.DEVELOPER_IDS = previousDeveloperIds;
-    }
-
-    if (previousDeployerIds === undefined) {
-      delete process.env.DEPLOYER_IDS;
-    } else {
-      process.env.DEPLOYER_IDS = previousDeployerIds;
-    }
-  }
+  assert.equal(resultA.ok, true);
+  assert.equal(resultB.ok, true);
+  assert.equal(crossAccessA.code, 'DEPLOYER_ONLY');
+  assert.equal(crossAccessB.code, 'DEPLOYER_ONLY');
 });
 test('WhatsApp group administrators without deployer permission are denied commands', async () => {
   const engine = new CommandEngine({
