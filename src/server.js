@@ -3,15 +3,14 @@
 const http = require('node:http');
 const { createNexaBot } = require('./index');
 
-const PORT = Number(process.env.PORT || 3000);
-
-function validateConfiguration() {
+function validateConfiguration(options = {}) {
   const developerIds = (process.env.DEVELOPER_IDS || '')
     .split(',')
     .map(id => id.trim())
     .filter(Boolean);
 
   const deployerId = (process.env.DEPLOYER_ID || '').trim();
+  const port = options.port ?? Number(process.env.PORT || 3000);
 
   if (developerIds.length === 0) {
     throw new Error('DEVELOPER_IDS must be configured.');
@@ -21,15 +20,15 @@ function validateConfiguration() {
     throw new Error('DEPLOYER_ID must be configured.');
   }
 
-  if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
     throw new Error('Invalid server port.');
   }
 
-  return { developerIds, deployerId };
+  return { developerIds, deployerId, port };
 }
 
-function startServer() {
-  const config = validateConfiguration();
+function startServer(options = {}) {
+  const config = validateConfiguration(options);
 
   const bot = createNexaBot({
     developerIds: config.developerIds,
@@ -62,8 +61,10 @@ function startServer() {
     }));
   });
 
-  server.listen(PORT, () => {
-    console.log(`NexaBot server listening on port ${PORT}`);
+  server.listen(config.port, () => {
+    console.log(
+      `NexaBot server listening on port ${server.address().port}`
+    );
     console.log(`Registered commands: ${bot.list().length}`);
   });
 
