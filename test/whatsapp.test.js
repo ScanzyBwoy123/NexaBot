@@ -665,3 +665,61 @@ test('NexaBot developer has access to every bot instance', async () => {
   assert.match(botA.replies[0], /menu: This feature is not connected yet/i);
   assert.match(botB.replies[0], /menu: This feature is not connected yet/i);
 });
+test('startWhatsApp initializes the client and registers handlers', async () => {
+  const { EventEmitter } = require('node:events');
+  const Module = require('node:module');
+
+  let initialized = false;
+
+  class MockClient extends EventEmitter {
+    async initialize() {
+      initialized = true;
+    }
+  }
+
+  class MockLocalAuth {
+    constructor(options) {
+      this.options = options;
+    }
+  }
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: MockClient,
+        LocalAuth: MockLocalAuth
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  const client = await startWhatsApp({
+    commandEngine: {
+      handle: async () => {},
+      authorizer: {
+        authorize: () => ({ allowed: true })
+      }
+    }
+  });
+
+  assert.ok(client instanceof MockClient);
+  assert.equal(initialized, true);
+  assert.equal(client.listenerCount('qr'), 1);
+  assert.equal(client.listenerCount('ready'), 1);
+  assert.equal(client.listenerCount('message'), 1);
+});
