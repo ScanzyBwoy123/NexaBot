@@ -46,8 +46,9 @@ function createRequestHandler() {
       }
 
       res.writeHead(404, {
-        'Content-Type': 'application/json'
-      });
+  'Content-Type': 'application/json',
+  'Cache-Control': 'no-store'
+});
 
       res.end(JSON.stringify({
         success: false,
