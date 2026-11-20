@@ -551,6 +551,7 @@ test('server reports a port conflict safely', async () => {
 
     assert.equal(error.code, 'EADDRINUSE');
     assert.equal(firstServer.listening, true);
+    assert.equal(secondServer.listening, false);
     const address = firstServer.address();
 
 const response = await fetch(
