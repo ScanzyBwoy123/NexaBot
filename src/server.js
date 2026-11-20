@@ -2,7 +2,7 @@
 
 const http = require('node:http');
 const { createNexaBot } = require('./index');
-
+const { startWhatsApp } = require('./whatsapp');
 function validateConfiguration(options = {}) {
   const developerIds = (process.env.DEVELOPER_IDS || '')
     .split(',')
