@@ -83,6 +83,18 @@ function startServer(options = {}) {
 
   const server = http.createServer(createRequestHandler());
 
+    server.on('error', error => {
+    console.error('NexaBot server error:', error.message);
+
+    if (require.main === module) {
+      process.exitCode = 1;
+    }
+
+    if (typeof options.onError === 'function') {
+      options.onError(error);
+    }
+  });
+
   server.listen(config.port, () => {
     console.log(
       `NexaBot server listening on port ${server.address().port}`
@@ -91,7 +103,6 @@ function startServer(options = {}) {
   });
 
   return { server, bot };
-}
 
 if (require.main === module) {
   try {
