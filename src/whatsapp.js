@@ -40,7 +40,9 @@ function registerWhatsAppEvents(client, handlers = {}) {
   client.on('qr', qr => {
     handlers.onQR?.(qr);
   });
-
+  client.on('code', code => {
+    handlers.onCode?.(code);
+  });
   client.on('authenticated', () => {
     handlers.onAuthenticated?.();
   });
