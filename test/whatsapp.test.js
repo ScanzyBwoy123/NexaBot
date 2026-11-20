@@ -644,6 +644,46 @@ test('real NexaBot instances enforce separate deployer identities', async () => 
   assert.equal(botB.replies.length, 1);
   assert.match(botB.replies[0], /menu: This feature is not connected yet/i);
 });
+test('NexaBot prevents one deployer from using another bot own inbox', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+  const { createNexaBot } = require('../src');
+
+  const client = new EventEmitter();
+
+  client.info = {
+    wid: {
+      _serialized: '233240000777@c.us'
+    }
+  };
+
+  let commandExecuted = false;
+
+  const commandEngine = createNexaBot({
+    developerIds: [],
+    deployerId: '233240000888'
+  });
+
+  const originalHandle = commandEngine.handle.bind(commandEngine);
+
+  commandEngine.handle = async context => {
+    commandExecuted = true;
+    return originalHandle(context);
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  client.emit('message_create', {
+    fromMe: true,
+    from: '233240000777@c.us',
+    body: '.menu',
+    reply: async () => {}
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(commandExecuted, false);
+});
 test('NexaBot developer has access to every bot instance', async () => {
   const { EventEmitter } = require('node:events');
   const { registerMessageHandler } = require('../src/whatsapp');
