@@ -112,7 +112,7 @@ test('health endpoint returns a healthy response', async () => {
     );
 
     const data = await response.json();
-
+    assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.equal(response.status, 200);
     assert.equal(data.success, true);
     assert.equal(data.status, 'healthy');
