@@ -465,7 +465,16 @@ server.on('close', () => {
     ({ server } = startServer({ port: 0 }));
 
 await once(server, 'listening');
+const address = server.address();
+const response = await fetch(
+  `http://127.0.0.1:${address.port}/health`
+);
 
+const data = await response.json();
+
+assert.equal(response.status, 200);
+assert.equal(data.status, 'healthy');
+assert.equal(data.service, 'NexaBot');
 assert.equal(server.listening, true);
   } finally {
     if (server?.listening) {
