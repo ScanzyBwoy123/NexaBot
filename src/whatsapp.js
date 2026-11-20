@@ -249,6 +249,19 @@ async function startWhatsApp(options = {}) {
 
   return client;
 }
+async function requestPairingCode(client, phoneNumber) {
+  if (!client || typeof client.requestPairingCode !== 'function') {
+    throw new Error('WhatsApp client is not ready.');
+  }
+
+  const normalizedNumber = String(phoneNumber || '').replace(/\D/g, '');
+
+  if (!/^[1-9]\d{7,14}$/.test(normalizedNumber)) {
+    throw new Error('Invalid international phone number.');
+  }
+
+  return client.requestPairingCode(normalizedNumber, true);
+}
 module.exports = {
   createWhatsAppClient,
   registerWhatsAppEvents,
