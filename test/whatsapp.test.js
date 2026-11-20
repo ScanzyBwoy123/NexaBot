@@ -917,3 +917,44 @@ test('startWhatsApp rejects a missing command engine', async () => {
 
   assert.equal(clientCreated, false);
 });
+test('startWhatsApp rejects a command engine without a handle function', async () => {
+  const Module = require('node:module');
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  let clientCreated = false;
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: class {
+          constructor() {
+            clientCreated = true;
+          }
+        },
+        LocalAuth: class {}
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  await assert.rejects(
+    startWhatsApp({ commandEngine: { handle: null } }),
+    /Invalid command engine/
+  );
+
+  assert.equal(clientCreated, false);
+});
