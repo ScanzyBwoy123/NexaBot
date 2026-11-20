@@ -728,6 +728,46 @@ test('NexaBot developer has access to every bot instance', async () => {
   assert.match(botA.replies[0], /menu: This feature is not connected yet/i);
   assert.match(botB.replies[0], /menu: This feature is not connected yet/i);
 });
+test('NexaBot deployer inbox commands stay isolated to their own bot instance', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+  const { createNexaBot } = require('../src');
+
+  function createInstance(deployerId) {
+    const client = new EventEmitter();
+    client.info = {
+      wid: {
+        _serialized: `${deployerId}@c.us`
+      }
+    };
+
+    const replies = [];
+    const commandEngine = createNexaBot({
+      developerIds: [],
+      deployerId
+    });
+
+    registerMessageHandler(client, commandEngine);
+
+    return { client, replies };
+  }
+
+  const botA = createInstance('233240000888');
+  const botB = createInstance('233240000777');
+
+  botA.client.emit('message_create', {
+    fromMe: true,
+    from: '233240000888@c.us',
+    body: '.menu',
+    reply: async response => botA.replies.push(response)
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(botA.replies.length, 1);
+  assert.equal(botB.replies.length, 0);
+  assert.match(botA.replies[0], /menu: This feature is not connected yet/i);
+});
 test('NexaBot developer can use commands from their own WhatsApp inbox', async () => {
   const { EventEmitter } = require('node:events');
   const { registerMessageHandler } = require('../src/whatsapp');
