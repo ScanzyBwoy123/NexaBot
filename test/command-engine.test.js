@@ -1160,7 +1160,7 @@ test('createNexaBot gives developers full access to all command permissions', as
   const engine = createNexaBot({
     prefix: '.',
     developerIds: [DEVELOPER_ID],
-    deployerIds: [DEPLOYER_ID]
+    deployerId: DEPLOYER_ID
   });
 
   engine.register({
