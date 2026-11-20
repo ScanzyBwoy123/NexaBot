@@ -521,3 +521,55 @@ test('WhatsApp message handler allows the registered deployer', async () => {
 
   assert.equal(commandExecuted, true);
 });
+test('WhatsApp deployers cannot access another deployers bot instance', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  function createInstance(deployerId) {
+    const client = new EventEmitter();
+    let commandExecuted = false;
+
+    const commandEngine = createMockCommandEngine(async () => {
+      commandExecuted = true;
+    });
+
+    commandEngine.authorizer = {
+      authorize(senderId) {
+        const sender = commandEngine.normalizeId(senderId);
+        const isDeployer = sender === deployerId;
+
+        return {
+          allowed: isDeployer,
+          isDeveloper: false,
+          isDeployer,
+          role: isDeployer ? 'deployer' : 'unauthorized',
+          sender
+        };
+      }
+    };
+
+    registerMessageHandler(client, commandEngine);
+
+    return { client, wasExecuted: () => commandExecuted };
+  }
+
+  const botA = createInstance('233240000888');
+  const botB = createInstance('233240000777');
+
+  await botA.client.listeners('message')[0]({
+    fromMe: false,
+    author: '233240000777@c.us',
+    from: '233240000777@c.us',
+    body: '.menu'
+  });
+
+  await botB.client.listeners('message')[0]({
+    fromMe: false,
+    author: '233240000777@c.us',
+    from: '233240000777@c.us',
+    body: '.menu'
+  });
+
+  assert.equal(botA.wasExecuted(), false);
+  assert.equal(botB.wasExecuted(), true);
+});
