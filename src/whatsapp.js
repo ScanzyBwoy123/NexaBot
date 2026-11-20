@@ -158,13 +158,12 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
   }
 
   client.on('message', message => {
-    void processMessage(message, false);
+    return processMessage(message, false);
   });
 
   client.on('message_create', message => {
-    void processMessage(message, true);
-  });
-
+    return processMessage(message, true);
+  });  
   return client;
 }
 async function startWhatsApp(options = {}) {
