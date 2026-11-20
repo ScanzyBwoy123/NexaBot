@@ -103,7 +103,9 @@ function startServer(options = {}) {
     console.log(`Registered commands: ${bot.list().length}`);
   });
    if (process.env.ENABLE_WHATSAPP === 'true') {
-    void startWhatsApp({
+        const whatsappStarter = options.startWhatsApp || startWhatsApp;
+
+    void whatsappStarter({
       commandEngine: bot,
       onCode: code => {
         console.log(`WhatsApp pairing code: ${code}`);
