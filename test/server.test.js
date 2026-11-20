@@ -413,6 +413,17 @@ test('server starts successfully with valid configuration', async () => {
     await once(server, 'listening');
 
     assert.equal(server.listening, true);
+    const address = firstServer.address();
+
+const response = await fetch(
+  `http://127.0.0.1:${address.port}/health`
+);
+
+const data = await response.json();
+
+assert.equal(response.status, 200);
+assert.equal(data.status, 'healthy');
+assert.equal(data.service, 'NexaBot');
     assert.ok(server.address().port > 0);
     assert.ok(result.bot.list().length > 0);
   } finally {
