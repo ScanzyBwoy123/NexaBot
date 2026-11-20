@@ -573,3 +573,51 @@ test('WhatsApp deployers cannot access another deployers bot instance', async ()
   assert.equal(botA.wasExecuted(), false);
   assert.equal(botB.wasExecuted(), true);
 });
+test('real NexaBot instances enforce separate deployer identities', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+  const { createNexaBot } = require('../src');
+
+  function createInstance(deployerId) {
+    const client = new EventEmitter();
+    const replies = [];
+
+    const commandEngine = createNexaBot({
+      developerIds: [],
+      deployerId
+    });
+
+    registerMessageHandler(client, commandEngine);
+
+    return {
+      client,
+      replies
+    };
+  }
+
+  const botA = createInstance('233240000888');
+  const botB = createInstance('233240000777');
+
+  const message = {
+    fromMe: false,
+    author: '233240000777@c.us',
+    from: '233240000777@c.us',
+    body: '.menu',
+    reply: async response => {
+      botB.replies.push(response);
+    }
+  };
+
+  await botA.client.listeners('message')[0]({
+    ...message,
+    reply: async response => {
+      botA.replies.push(response);
+    }
+  });
+
+  await botB.client.listeners('message')[0](message);
+
+  assert.equal(botA.replies.length, 0);
+  assert.equal(botB.replies.length, 1);
+  assert.match(botB.replies[0], /menu: This feature is not connected yet/i);
+});
