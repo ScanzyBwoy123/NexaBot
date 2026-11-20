@@ -34,27 +34,8 @@ this.now = options.now || Date.now;
   }
 
       normalizeId(id) {
-    const value = String(id ?? '').trim().toLowerCase();
-
-    if (!value) {
-      return '';
-    }
-
-    const match = value.match(/^([^@]+)@([a-z0-9.-]+)$/);
-
-    if (match) {
-      const identifier = match[1].replace(/\D/g, '');
-      const server = match[2];
-
-      if (server === 'c.us') {
-        return identifier;
-      }
-
-      return identifier ? `${identifier}@${server}` : '';
-    }
-
-    return value.replace(/\D/g, '');
-  }
+  return this.authorizer.normalizeId(id);
+}
 
   register(command) {
     if (!command || !command.name || typeof command.execute !== 'function') {
