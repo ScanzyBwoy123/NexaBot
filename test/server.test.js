@@ -209,6 +209,10 @@ test('health endpoint rejects unsupported HTTP methods', async () => {
     const data = await response.json();
 
     assert.equal(response.status, 404);
+    assert.match(
+  response.headers.get('content-type'),
+  /application\/json/
+);
     assert.equal(data.success, false);
     assert.equal(data.error, 'Not found');
   } finally {
