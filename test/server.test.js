@@ -159,7 +159,6 @@ test('unknown routes return a 404 response', async () => {
 
     const data = await response.json();
     assert.equal(response.headers.get('cache-control'), 'no-store');
-    assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.match(
   response.headers.get('content-type'),
   /application\/json/
