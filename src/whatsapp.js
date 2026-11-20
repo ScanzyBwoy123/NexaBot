@@ -19,7 +19,8 @@ function createWhatsAppClient(options = {}) {
     }),
 
     puppeteer: {
-      headless: true,
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+  headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox'
