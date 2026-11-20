@@ -702,6 +702,43 @@ test('NexaBot developer can use commands from their own WhatsApp inbox', async (
   assert.equal(replies.length, 1);
   assert.match(replies[0], /menu: This feature is not connected yet/i);
 });
+test('NexaBot deployer can use commands from their own WhatsApp inbox', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+  const { createNexaBot } = require('../src');
+
+  const client = new EventEmitter();
+
+  client.info = {
+    wid: {
+      user: '233240000888',
+      _serialized: '233240000888@c.us'
+    }
+  };
+
+  const replies = [];
+
+  const commandEngine = createNexaBot({
+    developerIds: [],
+    deployerId: '233240000888'
+  });
+
+  registerMessageHandler(client, commandEngine);
+
+  client.emit('message_create', {
+    id: { _serialized: 'deployer-test-message' },
+    fromMe: true,
+    from: '233240000888@c.us',
+    to: '233240000888@c.us',
+    body: '.menu',
+    reply: async response => replies.push(response)
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(replies.length, 1);
+  assert.match(replies[0], /menu: This feature is not connected yet/i);
+});
 test('startWhatsApp initializes the client and registers handlers', async () => {
   const { EventEmitter } = require('node:events');
   const Module = require('node:module');
