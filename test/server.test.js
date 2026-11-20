@@ -158,7 +158,10 @@ test('unknown routes return a 404 response', async () => {
     );
 
     const data = await response.json();
-
+    assert.match(
+  response.headers.get('content-type'),
+  /application\/json/
+);
     assert.equal(response.status, 404);
     assert.equal(data.success, false);
     assert.equal(data.error, 'Not found');
