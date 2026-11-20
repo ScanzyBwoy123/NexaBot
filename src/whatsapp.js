@@ -67,14 +67,37 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
       ? createIdentityResolver(client)
       : null;
 
-  client.on('message', async message => {
-    if (!message || message.fromMe) {
+  const pendingBotReplies = new Map();
+
+  async function processMessage(message, isOutgoing = false) {
+    if (!message || typeof message.body !== 'string') {
       return;
     }
 
-    const senderId = message.author || message.from;
+    if (isOutgoing && !message.fromMe) {
+      return;
+    }
 
-    if (!senderId || typeof message.body !== 'string') {
+    if (!isOutgoing && message.fromMe) {
+      return;
+    }
+
+    const chatId = message.from;
+
+    const senderId = isOutgoing
+      ? client.info?.wid?._serialized
+      : message.author || message.from;
+
+    if (!senderId) {
+      return;
+    }
+
+    const replyKey = `${chatId}:${message.body}`;
+
+    if (isOutgoing && pendingBotReplies.has(replyKey)) {
+      const timer = pendingBotReplies.get(replyKey);
+      clearTimeout(timer);
+      pendingBotReplies.delete(replyKey);
       return;
     }
 
@@ -92,19 +115,36 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
           commandSenderId = resolved.pn;
         }
       }
-        const access = commandEngine.authorizer?.authorize(commandSenderId);
 
-// Reject all interactions from unauthorized users.
-if (!access || !access.allowed) {
-  return;
-}    
+      const access = commandEngine.authorizer?.authorize(commandSenderId);
+
+      if (!access || !access.allowed) {
+        return;
+      }
+
       await commandEngine.handle({
         text: message.body,
         senderId: commandSenderId,
         originalSenderId: senderId,
-        chatId: message.from,
+        chatId,
         message,
-        reply: async response => message.reply(response)
+        reply: async response => {
+          const key = `${chatId}:${response}`;
+
+          const timer = setTimeout(() => {
+            pendingBotReplies.delete(key);
+          }, 15000);
+
+          pendingBotReplies.set(key, timer);
+
+          try {
+            return await message.reply(response);
+          } catch (error) {
+            clearTimeout(timer);
+            pendingBotReplies.delete(key);
+            throw error;
+          }
+        }
       });
     } catch (error) {
       if (typeof handlers.onError === 'function') {
@@ -115,6 +155,14 @@ if (!access || !access.allowed) {
         }
       }
     }
+  }
+
+  client.on('message', message => {
+    void processMessage(message, false);
+  });
+
+  client.on('message_create', message => {
+    void processMessage(message, true);
   });
 
   return client;
