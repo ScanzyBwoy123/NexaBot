@@ -484,3 +484,40 @@ test('WhatsApp message handler blocks unauthorized users', async () => {
 
   assert.equal(commandExecuted, false);
 });
+test('WhatsApp message handler allows the registered deployer', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+  let commandExecuted = false;
+
+  const commandEngine = createMockCommandEngine(async () => {
+    commandExecuted = true;
+  });
+
+  commandEngine.authorizer = {
+    authorize(senderId) {
+      const sender = commandEngine.normalizeId(senderId);
+      const isDeployer = sender === '233240000888';
+
+      return {
+        allowed: isDeployer,
+        isDeveloper: false,
+        isDeployer,
+        role: isDeployer ? 'deployer' : 'unauthorized',
+        sender
+      };
+    }
+  };
+
+  registerMessageHandler(client, commandEngine);
+
+  await client.listeners('message')[0]({
+    fromMe: false,
+    author: '233240000888@c.us',
+    from: '233240000888@c.us',
+    body: '.menu'
+  });
+
+  assert.equal(commandExecuted, true);
+});
