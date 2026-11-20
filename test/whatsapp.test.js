@@ -1096,14 +1096,6 @@ test('NexaBot does not suppress a genuine message matching a pending bot reply',
     'genuine-message'
   ]);
 });
-
-  await new Promise(resolve => setImmediate(resolve));
-
-  assert.deepEqual(handledMessages, [
-    'original-command',
-    'genuine-message'
-  ]);
-});
 test('startWhatsApp initializes the client and registers handlers', async () => {
   const { EventEmitter } = require('node:events');
   const Module = require('node:module');
