@@ -476,3 +476,57 @@ test('server shuts down gracefully', async () => {
     }
   }
 });
+test('server reports a port conflict safely', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+
+  let firstServer;
+  let secondServer;
+
+  try {
+    ({ server: firstServer } = startServer({ port: 0 }));
+
+    await once(firstServer, 'listening');
+
+    const occupiedPort = firstServer.address().port;
+
+    let reportError;
+
+    const errorPromise = new Promise(resolve => {
+      reportError = resolve;
+    });
+
+    ({ server: secondServer } = startServer({
+      port: occupiedPort,
+      onError: reportError
+    }));
+
+    const error = await errorPromise;
+
+    assert.equal(error.code, 'EADDRINUSE');
+    assert.equal(firstServer.listening, true);
+  } finally {
+    for (const server of [secondServer, firstServer]) {
+      if (server?.listening) {
+        const closed = once(server, 'close');
+        server.close();
+        await closed;
+      }
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
