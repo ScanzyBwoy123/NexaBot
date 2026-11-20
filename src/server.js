@@ -16,10 +16,6 @@ function validateConfiguration(options = {}) {
     throw new Error('DEVELOPER_IDS must be configured.');
   }
 
-  if (!deployerId) {
-    throw new Error('DEPLOYER_ID must be configured.');
-  }
-
   if (!Number.isInteger(port) || port < 0 || port > 65535) {
     throw new Error('Invalid server port.');
   }
