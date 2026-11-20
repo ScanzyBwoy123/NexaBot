@@ -1277,7 +1277,7 @@ test('createNexaBot reads developer and deployer IDs from environment variables'
 
   try {
     process.env.DEVELOPER_IDS = '233200000001';
-    process.env.DEPLOYER_IDS = '233200000002';
+    process.env.DEPLOYER_ID = '233200000002';
 
     const engine = createNexaBot({ prefix: '.' });
 
