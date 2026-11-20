@@ -541,3 +541,52 @@ assert.equal(data.service, 'NexaBot');
     }
   }
 });
+test('server reports unexpected errors through its error callback', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+
+  let reportError;
+
+  const errorPromise = new Promise(resolve => {
+    reportError = resolve;
+  });
+
+  let server;
+
+  try {
+    ({ server } = startServer({
+      port: 0,
+      onError: reportError
+    }));
+
+    await once(server, 'listening');
+
+    const expectedError = new Error('Unexpected server error');
+    server.emit('error', expectedError);
+
+    const receivedError = await errorPromise;
+
+    assert.equal(receivedError, expectedError);
+  } finally {
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
