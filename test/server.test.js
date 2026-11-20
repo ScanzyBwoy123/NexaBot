@@ -253,11 +253,11 @@ test('unexpected request errors return a safe 500 response', () => {
   const res = {
     headersSent: false,
 
-    writeHead(status) {
-      statusCode = status;
-      this.headersSent = true;
-    },
-
+    writeHead(status, headers) {
+  statusCode = status;
+  this.headers = headers;
+  this.headersSent = true;
+},
     end(body) {
       responseBody = body;
     },
