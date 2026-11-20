@@ -1007,13 +1007,17 @@ test('NexaBot ignores its own generated replies to prevent infinite loops', asyn
     from: '233240000888@c.us',
     body: '.test',
     reply: async response => {
-      client.emit('message_create', {
+      const sentMessage = {
         id: { _serialized: 'bot-generated-reply' },
         fromMe: true,
         from: '233240000888@c.us',
         body: response,
         reply: async () => {}
-      });
+      };
+
+      client.emit('message_create', sentMessage);
+
+      return sentMessage;
     }
   });
 
@@ -1021,6 +1025,7 @@ test('NexaBot ignores its own generated replies to prevent infinite loops', asyn
 
   assert.equal(commandCalls, 1);
 });
+
 test('NexaBot does not suppress a genuine message matching a pending bot reply', async () => {
   const { EventEmitter } = require('node:events');
   const { registerMessageHandler } = require('../src/whatsapp');
@@ -1034,6 +1039,7 @@ test('NexaBot does not suppress a genuine message matching a pending bot reply',
   };
 
   const handledMessages = [];
+  let resolveReply;
 
   const commandEngine = {
     authorizer: {
@@ -1055,7 +1061,9 @@ test('NexaBot does not suppress a genuine message matching a pending bot reply',
     fromMe: true,
     from: '233240000888@c.us',
     body: '.test',
-    reply: async () => {}
+    reply: () => new Promise(resolve => {
+      resolveReply = resolve;
+    })
   });
 
   await new Promise(resolve => setImmediate(resolve));
@@ -1068,8 +1076,6 @@ test('NexaBot does not suppress a genuine message matching a pending bot reply',
     reply: async () => {}
   });
 
-  await new Promise(resolve => setImmediate(resolve));
-
   client.emit('message_create', {
     id: { _serialized: 'bot-generated-reply' },
     fromMe: true,
@@ -1077,6 +1083,19 @@ test('NexaBot does not suppress a genuine message matching a pending bot reply',
     body: 'Bot response',
     reply: async () => {}
   });
+
+  resolveReply({
+    id: { _serialized: 'bot-generated-reply' }
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.deepEqual(handledMessages, [
+    'original-command',
+    'genuine-message'
+  ]);
+});
 
   await new Promise(resolve => setImmediate(resolve));
 
