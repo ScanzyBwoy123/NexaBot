@@ -344,3 +344,29 @@ test('server uses configured port and supports port overrides', () => {
     }
   }
 });
+test('server refuses to start without a deployer identity', () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  try {
+    process.env.DEVELOPER_IDS = '233241234567';
+    process.env.DEPLOYER_ID = '';
+
+    assert.throws(
+      () => startServer({ port: 0 }),
+      /DEPLOYER_ID must be configured/
+    );
+  } finally {
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
