@@ -1273,7 +1273,7 @@ test('createNexaBot reads developer and deployer IDs from environment variables'
   const { createNexaBot } = require('../src/index');
 
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousDeployerIds = process.env.DEPLOYER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
 
   try {
     process.env.DEVELOPER_IDS = '233200000001';
