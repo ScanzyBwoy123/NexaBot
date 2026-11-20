@@ -174,7 +174,7 @@ test('WhatsApp client configures phone-number pairing correctly', () => {
     delete require.cache[require.resolve('../src/whatsapp')];
   }
 });
-test('WhatsApp event handlers respond to all five connection events', () => {
+test('WhatsApp event handlers respond to all connection events including pairing code', () => {
   const { EventEmitter } = require('node:events');
   const { registerWhatsAppEvents } = require('../src/whatsapp');
 
@@ -183,6 +183,7 @@ test('WhatsApp event handlers respond to all five connection events', () => {
 
   registerWhatsAppEvents(client, {
     onQR: qr => received.qr = qr,
+    onCode: code => received.code = code,
     onAuthenticated: () => received.authenticated = true,
     onReady: () => received.ready = true,
     onAuthFailure: message => received.authFailure = message,
@@ -190,6 +191,7 @@ test('WhatsApp event handlers respond to all five connection events', () => {
   });
 
   client.emit('qr', 'test-qr-code');
+  client.emit('code', '12345678');
   client.emit('authenticated');
   client.emit('ready');
   client.emit('auth_failure', 'test authentication error');
@@ -197,6 +199,7 @@ test('WhatsApp event handlers respond to all five connection events', () => {
 
   assert.deepEqual(received, {
     qr: 'test-qr-code',
+    code: '12345678',
     authenticated: true,
     ready: true,
     authFailure: 'test authentication error',
