@@ -1124,6 +1124,32 @@ test('Developers can use deployer commands without being deployers', async () =>
   assert.equal(result.command, 'deployersettings');
   assert.equal(executions, 1);
 });
+test('Developer can use deployer commands without a deployer ID', async () => {
+  const engine = new CommandEngine({
+    prefix: '.',
+    developerIds: ['233200000001']
+  });
+
+  let executions = 0;
+
+  engine.register({
+    name: 'deployersettings',
+    permission: 'deployer',
+    execute: async () => {
+      executions++;
+      return 'Deployer access granted';
+    }
+  });
+
+  const result = await engine.handle({
+    text: '.deployersettings',
+    senderId: '233200000001'
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.command, 'deployersettings');
+  assert.equal(executions, 1);
+});
 test('Deployers cannot execute developer-only commands', async () => {
   const engine = new CommandEngine({
     prefix: '.',
