@@ -1,0 +1,9 @@
+.git
+.github
+node_modules
+.nexabot-auth
+data
+coverage
+.env
+.env.*
+test
