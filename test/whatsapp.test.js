@@ -1359,3 +1359,62 @@ test('startWhatsApp keeps the message handler active after ready', async () => {
 
   assert.deepEqual(receivedMessages, ['Hello NexaBot']);
 });
+test('startWhatsApp handles messages received before ready', async () => {
+  const { EventEmitter } = require('node:events');
+  const Module = require('node:module');
+
+  class MockClient extends EventEmitter {
+    async initialize() {}
+  }
+
+  class MockLocalAuth {}
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: MockClient,
+        LocalAuth: MockLocalAuth
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  const receivedMessages = [];
+
+  const client = await startWhatsApp({
+    commandEngine: {
+      handle: async input => {
+        receivedMessages.push(input.text);
+      },
+      authorizer: {
+        authorize: () => ({ allowed: true })
+      }
+    }
+  });
+
+  client.emit('message', {
+    from: '233241234567@c.us',
+    body: 'Message before ready',
+    fromMe: false,
+    reply: async () => {}
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.deepEqual(receivedMessages, ['Message before ready']);
+});
