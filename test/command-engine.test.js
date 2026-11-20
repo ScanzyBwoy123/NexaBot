@@ -1319,11 +1319,11 @@ test('createNexaBot reads developer and deployer IDs from environment variables'
       process.env.DEVELOPER_IDS = previousDeveloperIds;
     }
 
-    if (previousDeployerIds === undefined) {
-      delete process.env.DEPLOYER_IDS;
-    } else {
-      process.env.DEPLOYER_IDS = previousDeployerIds;
-    }
+   if (previousDeployerId === undefined) {
+  delete process.env.DEPLOYER_ID;
+} else {
+  process.env.DEPLOYER_ID = previousDeployerId;
+}   
   }
 });
 test('createNexaBot supports multiple comma-separated developer and deployer IDs', async () => {
