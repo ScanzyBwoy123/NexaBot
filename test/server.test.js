@@ -461,6 +461,7 @@ server.on('close', () => {
     await closed;
 
     assert.equal(server.listening, false);
+    assert.equal(closeEventCount, 1);
   } finally {
     if (server?.listening) {
       const closed = once(server, 'close');
