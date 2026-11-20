@@ -739,6 +739,38 @@ test('NexaBot deployer can use commands from their own WhatsApp inbox', async ()
   assert.equal(replies.length, 1);
   assert.match(replies[0], /menu: This feature is not connected yet/i);
 });
+test('NexaBot blocks unauthorized users from executing commands in their own inbox', async () => {
+  const { EventEmitter } = require('node:events');
+  const { registerMessageHandler } = require('../src/whatsapp');
+
+  const client = new EventEmitter();
+
+  client.info = {
+    wid: {
+      _serialized: '233240000999@c.us'
+    }
+  };
+
+  let commandExecuted = false;
+
+  const commandEngine = createMockCommandEngine(async () => {
+    commandExecuted = true;
+  });
+
+  registerMessageHandler(client, commandEngine);
+
+  client.emit('message_create', {
+    id: { _serialized: 'unauthorized-inbox-test' },
+    fromMe: true,
+    from: '233240000999@c.us',
+    body: '.menu',
+    reply: async () => {}
+  });
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.equal(commandExecuted, false);
+});
 test('NexaBot ignores its own generated replies to prevent infinite loops', async () => {
   const { EventEmitter } = require('node:events');
   const { registerMessageHandler } = require('../src/whatsapp');
