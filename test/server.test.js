@@ -308,3 +308,39 @@ test('server rejects invalid port configurations', () => {
     }
   }
 });
+test('server uses configured port and supports port overrides', () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+  const previousPort = process.env.PORT;
+
+  try {
+    process.env.DEVELOPER_IDS = '233241234567';
+    process.env.DEPLOYER_ID = '233240000888';
+    process.env.PORT = '4100';
+
+    assert.equal(validateConfiguration().port, 4100);
+
+    assert.equal(
+      validateConfiguration({ port: 4200 }).port,
+      4200
+    );
+  } finally {
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+
+    if (previousPort === undefined) {
+      delete process.env.PORT;
+    } else {
+      process.env.PORT = previousPort;
+    }
+  }
+});
