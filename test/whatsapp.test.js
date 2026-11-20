@@ -835,3 +835,44 @@ test('startWhatsApp preserves startup errors when onError throws', async () => {
     error => error === startupError
   );
 });
+test('startWhatsApp rejects an invalid command engine', async () => {
+  const Module = require('node:module');
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  let clientCreated = false;
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: class {
+          constructor() {
+            clientCreated = true;
+          }
+        },
+        LocalAuth: class {}
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  await assert.rejects(
+    startWhatsApp({ commandEngine: {} }),
+    /Invalid command engine/
+  );
+
+  assert.equal(clientCreated, false);
+});
