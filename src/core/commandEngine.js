@@ -1,5 +1,6 @@
 'use strict';
 
+const { createAuthorizer } = require('./authorization');
 class CommandEngine {
   constructor(options = {}) {
     this.prefix = options.prefix ?? '.';
