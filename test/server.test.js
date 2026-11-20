@@ -396,3 +396,42 @@ test('server refuses to start without a developer identity', () => {
     }
   }
 });
+test('server starts successfully with valid configuration', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+
+  let server;
+
+  try {
+    const result = startServer({ port: 0 });
+
+    server = result.server;
+
+    await once(server, 'listening');
+
+    assert.equal(server.listening, true);
+    assert.ok(server.address().port > 0);
+    assert.ok(result.bot.list().length > 0);
+  } finally {
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
