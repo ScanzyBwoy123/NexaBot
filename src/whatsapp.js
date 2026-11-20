@@ -17,7 +17,12 @@ function createWhatsAppClient(options = {}) {
       clientId,
       dataPath: authDir
     }),
-
+        pairWithPhoneNumber: process.env.WHATSAPP_PAIRING_NUMBER
+      ? {
+          phoneNumber: process.env.WHATSAPP_PAIRING_NUMBER.replace(/\D/g, ''),
+          showNotification: true
+        }
+      : undefined,
     puppeteer: {
   executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
   headless: true,
