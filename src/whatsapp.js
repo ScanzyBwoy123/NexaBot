@@ -150,6 +150,6 @@ async function startWhatsApp(options = {}) {
 module.exports = {
   createWhatsAppClient,
   registerWhatsAppEvents,
-  registerMessageHandler
-    startWhatsApp
+    registerMessageHandler,
+  startWhatsApp
 };
