@@ -282,10 +282,7 @@ test('unexpected request errors return a safe 500 response', () => {
   const data = JSON.parse(responseBody);
 
   assert.equal(statusCode, 500);
-  assert.match(
-  res.headersSent ? 'application/json' : '',
-  /application\/json/
-);
+ assert.equal(res.headers['Content-Type'], 'application/json');
   assert.equal(data.success, false);
   assert.equal(data.error, 'Internal server error');
   assert.ok(loggedError.includes('Simulated internal failure'));
