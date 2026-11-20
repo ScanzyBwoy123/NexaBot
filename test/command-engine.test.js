@@ -1101,7 +1101,7 @@ test('Developers can use deployer commands without being deployers', async () =>
   const engine = new CommandEngine({
     prefix: '.',
     developerIds: ['233200000001'],
-    deployerIds: ['233200000002']
+    deployerId: '233200000002'
   });
 
   let executions = 0;
