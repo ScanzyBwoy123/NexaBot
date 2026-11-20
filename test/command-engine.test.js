@@ -1065,7 +1065,7 @@ test('Only the configured deployer can use deployer commands', async () => {
 
   const engine = new CommandEngine({
   prefix: '.',
-  deployerIds: [DEPLOYER_ID]
+  deployerId: DEPLOYER_ID
 });
 
   let executions = 0;
