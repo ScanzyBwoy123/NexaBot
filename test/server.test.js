@@ -590,3 +590,42 @@ test('server reports unexpected errors through its error callback', async () => 
     }
   }
 });
+test('server handles unexpected errors without an error callback', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+
+  let server;
+
+  try {
+    ({ server } = startServer({ port: 0 }));
+
+    await once(server, 'listening');
+
+    assert.doesNotThrow(() => {
+      server.emit('error', new Error('Unexpected server error'));
+    });
+
+    assert.equal(server.listening, true);
+  } finally {
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+  }
+});
