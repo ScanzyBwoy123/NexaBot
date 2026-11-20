@@ -283,6 +283,7 @@ test('unexpected request errors return a safe 500 response', () => {
 
   assert.equal(statusCode, 500);
  assert.equal(res.headers['Content-Type'], 'application/json');
+  assert.equal(res.headers['Cache-Control'], 'no-store');
   assert.equal(data.success, false);
   assert.equal(data.error, 'Internal server error');
   assert.ok(loggedError.includes('Simulated internal failure'));
