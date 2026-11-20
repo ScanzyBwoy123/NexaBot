@@ -5,28 +5,61 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const Module = require('node:module');
 function createMockCommandEngine(handle) {
+  function normalizeId(id) {
+    const value = String(id ?? '').trim().toLowerCase();
+
+    if (!value) return '';
+
+    const match = value.match(/^([^@]+)@([a-z0-9.-]+)$/);
+
+    if (match) {
+      const identifier = match[1].replace(/\D/g, '');
+      const server = match[2];
+
+      if (server === 'c.us') return identifier;
+
+      return identifier ? `${identifier}@${match[2]}` : '';
+    }
+
+    return value.replace(/\D/g, '');
+  }
+
+  const developerIds = new Set([
+    '233241234567',
+    '123456789012345@lid',
+    '987654321098765@lid'
+  ]);
+
+  const deployerId = '';
+
   return {
-    normalizeId(id) {
-      const value = String(id ?? '').trim().toLowerCase();
+    normalizeId,
+    developerIds,
+    deployerId,
 
-      if (value.endsWith('@c.us')) {
-        return value.split('@')[0].replace(/\D/g, '');
+    authorizer: {
+      authorize(senderId) {
+        const sender = normalizeId(senderId);
+        const isDeveloper = Boolean(
+          sender && developerIds.has(sender)
+        );
+        const isDeployer = Boolean(
+          sender && deployerId && sender === deployerId
+        );
+
+        return {
+          allowed: isDeveloper || isDeployer,
+          isDeveloper,
+          isDeployer,
+          role: isDeveloper
+            ? 'developer'
+            : isDeployer
+              ? 'deployer'
+              : 'unauthorized',
+          sender
+        };
       }
-
-      if (value.endsWith('@lid')) {
-        return value;
-      }
-
-      return value.replace(/\D/g, '');
     },
-
-    developerIds: new Set([
-      '233241234567',
-      '123456789012345@lid',
-      '987654321098765@lid'
-    ]),
-
-    deployerId: '',
 
     handle
   };
