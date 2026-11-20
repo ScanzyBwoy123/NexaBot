@@ -787,3 +787,73 @@ test('server starts WhatsApp when it is enabled', async () => {
     }
   }
 });
+test('pairing code is logged but never exposed by the health endpoint', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
+  const originalLog = console.log;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+  process.env.ENABLE_WHATSAPP = 'true';
+
+  const logs = [];
+  let receivedOptions;
+  let server;
+
+  try {
+    console.log = (...args) => logs.push(args.join(' '));
+
+    ({ server } = startServer({
+      port: 0,
+      startWhatsApp: options => {
+        receivedOptions = options;
+        return Promise.resolve();
+      }
+    }));
+
+    await once(server, 'listening');
+
+    receivedOptions.onCode('12345678');
+
+    assert.ok(
+      logs.some(line => line.includes('WhatsApp pairing code: 12345678'))
+    );
+
+    const response = await fetch(
+      `http://127.0.0.1:${server.address().port}/health`
+    );
+
+    const healthBody = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.equal(healthBody.includes('12345678'), false);
+    assert.equal(healthBody.includes('pairing'), false);
+  } finally {
+    console.log = originalLog;
+
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+
+    if (previousEnableWhatsApp === undefined) {
+      delete process.env.ENABLE_WHATSAPP;
+    } else {
+      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
+    }
+  }
+});
