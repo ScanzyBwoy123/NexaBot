@@ -1379,7 +1379,7 @@ test('each bot instance accepts only its own deployer', async () => {
 test('WhatsApp group administrators without deployer permission are denied commands', async () => {
   const engine = new CommandEngine({
     prefix: '.',
-    deployerIds: ['233200000001']
+    deployerId: '233200000001'
   });
 
   let executions = 0;
