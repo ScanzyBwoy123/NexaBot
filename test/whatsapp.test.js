@@ -1418,3 +1418,68 @@ test('startWhatsApp handles messages received before ready', async () => {
 
   assert.deepEqual(receivedMessages, ['Message before ready']);
 });
+test('startWhatsApp processes multiple incoming messages in quick succession', async () => {
+  const { EventEmitter } = require('node:events');
+  const Module = require('node:module');
+
+  class MockClient extends EventEmitter {
+    async initialize() {}
+  }
+
+  class MockLocalAuth {}
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: MockClient,
+        LocalAuth: MockLocalAuth
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  const receivedMessages = [];
+
+  const client = await startWhatsApp({
+    commandEngine: {
+      handle: async input => {
+        receivedMessages.push(input.text);
+      },
+      authorizer: {
+        authorize: () => ({ allowed: true })
+      }
+    }
+  });
+
+  for (const body of ['First message', 'Second message', 'Third message']) {
+    client.emit('message', {
+      from: '233241234567@c.us',
+      body,
+      fromMe: false,
+      reply: async () => {}
+    });
+  }
+
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.deepEqual(receivedMessages, [
+    'First message',
+    'Second message',
+    'Third message'
+  ]);
+});
