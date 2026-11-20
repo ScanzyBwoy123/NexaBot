@@ -151,4 +151,5 @@ module.exports = {
   createWhatsAppClient,
   registerWhatsAppEvents,
   registerMessageHandler
+    startWhatsApp
 };
