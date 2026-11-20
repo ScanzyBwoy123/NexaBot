@@ -162,7 +162,8 @@ test('unknown routes return a 404 response', async () => {
     assert.match(
   response.headers.get('content-type'),
   /application\/json/
-);
+);  
+    assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.equal(response.status, 404);
     assert.equal(data.success, false);
     assert.equal(data.error, 'Not found');
