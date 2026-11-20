@@ -462,6 +462,11 @@ server.on('close', () => {
 
     assert.equal(server.listening, false);
     assert.equal(closeEventCount, 1);
+    ({ server } = startServer({ port: 0 }));
+
+await once(server, 'listening');
+
+assert.equal(server.listening, true);
   } finally {
     if (server?.listening) {
       const closed = once(server, 'close');
