@@ -958,3 +958,58 @@ test('startWhatsApp rejects a command engine without a handle function', async (
 
   assert.equal(clientCreated, false);
 });
+test('startWhatsApp calls onReady when WhatsApp becomes ready', async () => {
+  const { EventEmitter } = require('node:events');
+  const Module = require('node:module');
+
+  class MockClient extends EventEmitter {
+    async initialize() {}
+  }
+
+  class MockLocalAuth {}
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: MockClient,
+        LocalAuth: MockLocalAuth
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  let readyCalled = false;
+
+  const client = await startWhatsApp({
+    commandEngine: {
+      handle: async () => {},
+      authorizer: {
+        authorize: () => ({ allowed: true })
+      }
+    },
+    onReady: () => {
+      readyCalled = true;
+    }
+  });
+
+  assert.equal(readyCalled, false);
+
+  client.emit('ready');
+
+  assert.equal(readyCalled, true);
+});
