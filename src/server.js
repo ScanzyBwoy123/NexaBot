@@ -102,7 +102,22 @@ function startServer(options = {}) {
     );
     console.log(`Registered commands: ${bot.list().length}`);
   });
-
+   if (process.env.ENABLE_WHATSAPP === 'true') {
+    void startWhatsApp({
+      commandEngine: bot,
+      onCode: code => {
+        console.log(`WhatsApp pairing code: ${code}`);
+      },
+      onReady: () => {
+        console.log('NexaBot WhatsApp connection is ready.');
+      },
+      onError: error => {
+        console.error('WhatsApp startup error:', error.message);
+      }
+    }).catch(error => {
+      console.error('WhatsApp initialization failed:', error.message);
+    });
+  }
     return { server, bot };
 }
 
