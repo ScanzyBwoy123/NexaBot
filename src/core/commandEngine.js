@@ -12,10 +12,18 @@ if (
 ) {
   throw new Error('Invalid command prefix.');
 }
-        this.developerIds = new Set(
-      (options.developerIds || []).map(id => this.normalizeId(id))
-    );
-    this.deployerId = this.normalizeId(options.deployerId); 
+     this.authorizer = createAuthorizer({
+  developerIds: options.developerIds,
+  deployerId: options.deployerId
+});
+
+this.developerIds = new Set(
+  (options.developerIds || [])
+    .map(id => this.authorizer.normalizeId(id))
+    .filter(Boolean)
+);
+
+this.deployerId = this.authorizer.normalizeId(options.deployerId);   
     this.logger = options.logger || console;
     this.commands = new Map();
      this.cooldowns = new Map();
