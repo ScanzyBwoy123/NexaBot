@@ -36,29 +36,47 @@ function startServer(options = {}) {
   });
 
   const server = http.createServer((req, res) => {
-    if (req.method === 'GET' && req.url === '/health') {
-      res.writeHead(200, {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-store'
+    try {
+      if (req.method === 'GET' && req.url === '/health') {
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        });
+
+        res.end(JSON.stringify({
+          success: true,
+          status: 'healthy',
+          service: 'NexaBot'
+        }));
+
+        return;
+      }
+
+      res.writeHead(404, {
+        'Content-Type': 'application/json'
       });
 
       res.end(JSON.stringify({
-        success: true,
-        status: 'healthy',
-        service: 'NexaBot'
+        success: false,
+        error: 'Not found'
       }));
+    } catch (error) {
+      console.error('NexaBot request error:', error.message);
 
-      return;
+      if (!res.headersSent) {
+        res.writeHead(500, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        });
+
+        res.end(JSON.stringify({
+          success: false,
+          error: 'Internal server error'
+        }));
+      } else {
+        res.destroy();
+      }
     }
-
-    res.writeHead(404, {
-      'Content-Type': 'application/json'
-    });
-
-    res.end(JSON.stringify({
-      success: false,
-      error: 'Not found'
-    }));
   });
 
   server.listen(config.port, () => {
