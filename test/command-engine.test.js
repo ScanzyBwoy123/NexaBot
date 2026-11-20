@@ -248,7 +248,7 @@ const engine = new CommandEngine({
 test('Aliases cannot bypass deployer-only permissions', async () => {
   const engine = new CommandEngine({
     prefix: '.',
-    deployerIds: [OWNER_ID]
+    deployerId: OWNER_ID
   });
 
   let executions = 0;
