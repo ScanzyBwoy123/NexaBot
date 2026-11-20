@@ -671,6 +671,7 @@ test('NexaBot developer can use commands from their own WhatsApp inbox', async (
   const { createNexaBot } = require('../src');
 
   const client = new EventEmitter();
+
   client.info = {
     wid: {
       user: '233241234567',
@@ -688,8 +689,10 @@ test('NexaBot developer can use commands from their own WhatsApp inbox', async (
   registerMessageHandler(client, commandEngine);
 
   client.emit('message_create', {
+    id: { _serialized: 'developer-test-message' },
     fromMe: true,
     from: '233241234567@c.us',
+    to: '233241234567@c.us',
     body: '.menu',
     reply: async response => replies.push(response)
   });
