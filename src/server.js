@@ -248,7 +248,11 @@ function createRequestHandler(options = {}) {
 }
 
 function startServer(options = {}) {
-  const supabase = options.supabase || createSupabaseClient();
+  const supabase = options.supabase || (
+  process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? createSupabaseClient()
+    : null
+);
   const config = validateConfiguration(options);
 
   const bot = createNexaBot({
