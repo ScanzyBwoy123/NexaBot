@@ -11,12 +11,15 @@ function createSupabaseClient() {
   }
 
   return createClient(url, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false
-    }
-  });
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+    detectSessionInUrl: false
+  },
+  realtime: {
+    transport: WebSocket
+  }
+});
 }
 
 module.exports = { createSupabaseClient };
