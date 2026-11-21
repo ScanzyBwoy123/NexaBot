@@ -120,48 +120,23 @@ test('WhatsApp client uses a separate NexaBot authentication directory', () => {
     delete require.cache[require.resolve('../src/whatsapp')];
   }
 });
-test('WhatsApp client configures phone-number pairing correctly', () => {
-  const originalLoad = Module._load;
-  const previousNumber = process.env.WHATSAPP_PAIRING_NUMBER;
-  let capturedOptions;
+test('WhatsApp pairing requests a code using the supplied phone number', async () => {
+  let receivedArguments;
 
-  class MockLocalAuth {
-    constructor(options) {
-      this.options = options;
+  const client = {
+    async requestPairingCode(...args) {
+      receivedArguments = args;
+      return '12345678';
     }
-  }
+  };
 
-  class MockClient {
-    constructor(options) {
-      capturedOptions = options;
-    }
-  }
+  const { requestPairingCode } = require('../src/whatsapp');
 
-  try {
-    process.env.WHATSAPP_PAIRING_NUMBER = '+233241234567';
+  const code = await requestPairingCode(client, '+233 24 123 4567');
 
-    Module._load = function (request, parent, isMain) {
-      if (request === 'whatsapp-web.js') {
-        return {
-          Client: MockClient,
-          LocalAuth: MockLocalAuth
-        };
-      }
-
-      return originalLoad.call(this, request, parent, isMain);
-    };
-
-    const modulePath = require.resolve('../src/whatsapp');
-    delete require.cache[modulePath];
-
-    const { createWhatsAppClient } = require('../src/whatsapp');
-
-    createWhatsAppClient();
-
-    assert.deepEqual(capturedOptions.pairWithPhoneNumber, {
-      phoneNumber: '233241234567',
-      showNotification: true
-    });
+  assert.equal(code, '12345678');
+  assert.deepEqual(receivedArguments, ['233241234567', true]);
+});
   } finally {
     Module._load = originalLoad;
 
