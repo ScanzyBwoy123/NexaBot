@@ -114,6 +114,8 @@ const server = http.createServer(createRequestHandler({
       onError: error => {
         console.error('WhatsApp startup error:', error.message);
       }
+       }).then(client => {
+      whatsappClient = client;
     }).catch(error => {
       console.error('WhatsApp initialization failed:', error.message);
     });
