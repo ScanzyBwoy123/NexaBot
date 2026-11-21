@@ -60,6 +60,9 @@ function readJsonBody(req) {
 }
 
 function createRequestHandler(options = {}) {
+    const pairingAttempts = new Map();
+  const pairingWindowMs = 10 * 60 * 1000;
+  const maxPairingAttempts = 3;
   return async (req, res) => {
     try {
       if (req.method === 'GET' && req.url === '/health') {
