@@ -265,12 +265,6 @@ async function requestPairingCode(client, phoneNumber) {
 module.exports = {
   createWhatsAppClient,
   registerWhatsAppEvents,
-    registerMessageHandler,
-  startWhatsApp
-};
-module.exports = {
-  createWhatsAppClient,
-  registerWhatsAppEvents,
   registerMessageHandler,
   startWhatsApp,
   requestPairingCode
