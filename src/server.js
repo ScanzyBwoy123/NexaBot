@@ -263,7 +263,8 @@ function startServer(options = {}) {
   let whatsappClient = null;
 
 const server = http.createServer(createRequestHandler({
-  getWhatsAppClient: () => whatsappClient
+  getWhatsAppClient: () => whatsappClient,
+  supabase
 }));
 
     server.on('error', error => {
