@@ -293,7 +293,7 @@ test('unexpected request errors return a safe 500 response', () => {
   assert.equal(res.headers['Cache-Control'], 'no-store');
   assert.equal(data.success, false);
   assert.equal(data.error, 'Internal server error');
-  assert.ok(loggedError.includes('Simulated internal failure'));
+  assert.ok(loggedError.includes('NexaBot request error: Pairing request failed.'));
   assert.ok(!responseBody.includes('Simulated internal failure'));
 });
 test('server rejects invalid port configurations', () => {
