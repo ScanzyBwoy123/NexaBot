@@ -156,7 +156,46 @@ function createRequestHandler(options = {}) {
           });
         }
 
-        const code = await requestPairingCode(client, body.phoneNumber);
+        
+        const cooldownUntil = failedPairingCooldowns.get(normalizedPhoneNumber);
+
+        if (cooldownUntil && Date.now() < cooldownUntil) {
+          const retryAfter = Math.ceil(
+            (cooldownUntil - Date.now()) / 1000
+          );
+
+          res.writeHead(429, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+            'Retry-After': String(retryAfter)
+          });
+
+          res.end(JSON.stringify({
+            success: false,
+            error: 'Pairing failed recently. Wait before trying again.'
+          }));
+
+          return;
+        }
+
+        if (cooldownUntil) {
+          failedPairingCooldowns.delete(normalizedPhoneNumber);
+        }
+
+        let code;
+
+        try {
+          code = await requestPairingCode(client, body.phoneNumber);
+          failedPairingCooldowns.delete(normalizedPhoneNumber);
+        } catch (error) {
+          failedPairingCooldowns.set(
+            normalizedPhoneNumber,
+            Date.now() + failedPairingCooldownMs
+          );
+
+          throw error;
+        }
+
 
 
         res.writeHead(200, {
