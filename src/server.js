@@ -61,6 +61,8 @@ function readJsonBody(req) {
 
 function createRequestHandler(options = {}) {
     const pairingAttempts = new Map();
+    const failedPairingCooldowns = new Map();
+  const failedPairingCooldownMs = 60 * 1000;
   const pairingWindowMs = 10 * 60 * 1000;
   const maxPairingAttempts = 3;
   return async (req, res) => {
