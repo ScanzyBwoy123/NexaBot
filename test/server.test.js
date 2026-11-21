@@ -797,7 +797,7 @@ test('server starts WhatsApp when it is enabled', async () => {
     }
   }
 });
-test('pairing code is logged but never exposed by the health endpoint', async () => {
+test('pairing code is never logged or exposed by the health endpoint', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
   const previousDeployerId = process.env.DEPLOYER_ID;
   const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
@@ -826,9 +826,10 @@ test('pairing code is logged but never exposed by the health endpoint', async ()
 
     receivedOptions.onCode('12345678');
 
-    assert.ok(
-      logs.some(line => line.includes('WhatsApp pairing code: 12345678'))
-    );
+    assert.equal(
+  logs.some(line => line.includes('12345678')),
+  false
+);
 
     const response = await fetch(
       `http://127.0.0.1:${server.address().port}/health`
