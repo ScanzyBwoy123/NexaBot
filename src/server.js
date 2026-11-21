@@ -3,6 +3,17 @@
 const http = require('node:http');
 const crypto = require('node:crypto');
 const { createNexaBot } = require('./index');
+function safeTokenMatch(provided, expected) {
+  if (typeof provided !== 'string' || typeof expected !== 'string') {
+    return false;
+  }
+
+  const providedBuffer = Buffer.from(provided);
+  const expectedBuffer = Buffer.from(expected);
+
+  return providedBuffer.length === expectedBuffer.length &&
+    crypto.timingSafeEqual(providedBuffer, expectedBuffer);
+}
 const { startWhatsApp, requestPairingCode } = require('./whatsapp');
 function validateConfiguration(options = {}) {
   const developerIds = (process.env.DEVELOPER_IDS || '')
