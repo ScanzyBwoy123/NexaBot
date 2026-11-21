@@ -22,6 +22,30 @@ function validateConfiguration(options = {}) {
 
   return { developerIds, deployerId, port };
 }
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let body = '';
+
+    req.on('data', chunk => {
+      body += chunk;
+
+      if (body.length > 1024) {
+        reject(new Error('Request body too large.'));
+        req.destroy();
+      }
+    });
+
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(body || '{}'));
+      } catch {
+        reject(new Error('Invalid JSON body.'));
+      }
+    });
+
+    req.on('error', reject);
+  });
+}
 
 function createRequestHandler(options = {}) {
   return (req, res) => {
