@@ -117,7 +117,45 @@ function createRequestHandler(options = {}) {
           return;
         }
 
+        
+        const normalizedPhoneNumber = String(body.phoneNumber || '').replace(/\D/g, '');
+        const now = Date.now();
+        const previousAttempt = pairingAttempts.get(normalizedPhoneNumber);
+
+        if (previousAttempt && now - previousAttempt.startedAt >= pairingWindowMs) {
+          pairingAttempts.delete(normalizedPhoneNumber);
+        }
+
+        const attempt = pairingAttempts.get(normalizedPhoneNumber);
+
+        if (attempt && attempt.count >= maxPairingAttempts) {
+          res.writeHead(429, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+            'Retry-After': String(
+              Math.ceil((pairingWindowMs - (now - attempt.startedAt)) / 1000)
+            )
+          });
+
+          res.end(JSON.stringify({
+            success: false,
+            error: 'Too many pairing requests. Try again later.'
+          }));
+
+          return;
+        }
+
+        if (attempt) {
+          attempt.count += 1;
+        } else {
+          pairingAttempts.set(normalizedPhoneNumber, {
+            count: 1,
+            startedAt: now
+          });
+        }
+
         const code = await requestPairingCode(client, body.phoneNumber);
+
 
         res.writeHead(200, {
           'Content-Type': 'application/json',
