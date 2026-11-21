@@ -1745,3 +1745,79 @@ test('pairing endpoint rejects oversized JSON without crashing the server', asyn
     }
   }
 });
+test('pairing code is never exposed in request error logs', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
+  const previousPairingToken = process.env.PAIRING_API_TOKEN;
+  const originalConsoleError = console.error;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.ENABLE_WHATSAPP = 'true';
+  process.env.PAIRING_API_TOKEN = 'test-secret-token';
+
+  const secretCode = '87654321';
+  const logs = [];
+  let server;
+
+  try {
+    console.error = (...args) => logs.push(args.join(' '));
+
+    ({ server } = startServer({
+      port: 0,
+      startWhatsApp: async () => ({
+        async requestPairingCode() {
+          throw new Error(`Pairing failed with code ${secretCode}`);
+        }
+      })
+    }));
+
+    await once(server, 'listening');
+    await new Promise(resolve => setImmediate(resolve));
+
+    const response = await fetch(
+      `http://127.0.0.1:${server.address().port}/pairing/request`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer test-secret-token'
+        },
+        body: JSON.stringify({
+          phoneNumber: '233241234567'
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    assert.equal(response.status, 500);
+    assert.equal(result.error, 'Internal server error');
+    assert.equal(logs.some(line => line.includes(secretCode)), false);
+  } finally {
+    console.error = originalConsoleError;
+
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousEnableWhatsApp === undefined) {
+      delete process.env.ENABLE_WHATSAPP;
+    } else {
+      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
+    }
+
+    if (previousPairingToken === undefined) {
+      delete process.env.PAIRING_API_TOKEN;
+    } else {
+      process.env.PAIRING_API_TOKEN = previousPairingToken;
+    }
+  }
+});
