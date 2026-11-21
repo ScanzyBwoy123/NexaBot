@@ -1053,6 +1053,7 @@ test('pairing endpoint accepts the correct secret token', async () => {
     const result = await response.json();
 
     assert.equal(response.status, 200);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
     assert.equal(result.success, true);
     assert.equal(result.code, '87654321');
   } finally {
