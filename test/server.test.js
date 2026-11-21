@@ -1619,3 +1619,66 @@ test('pairing endpoint rejects requests when no API token is configured', async 
     }
   }
 });
+test('pairing endpoint handles malformed JSON without crashing the server', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
+  const previousPairingToken = process.env.PAIRING_API_TOKEN;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.ENABLE_WHATSAPP = 'false';
+  process.env.PAIRING_API_TOKEN = 'test-secret-token';
+
+  let server;
+
+  try {
+    ({ server } = startServer({ port: 0 }));
+    await once(server, 'listening');
+
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+
+    const response = await fetch(`${baseUrl}/pairing/request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer test-secret-token'
+      },
+      body: '{"phoneNumber":'
+    });
+
+    const result = await response.json();
+
+    assert.equal(response.status, 500);
+    assert.equal(result.success, false);
+    assert.equal(result.error, 'Internal server error');
+
+    const healthResponse = await fetch(`${baseUrl}/health`);
+    const healthResult = await healthResponse.json();
+
+    assert.equal(healthResponse.status, 200);
+    assert.equal(healthResult.status, 'healthy');
+  } finally {
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousEnableWhatsApp === undefined) {
+      delete process.env.ENABLE_WHATSAPP;
+    } else {
+      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
+    }
+
+    if (previousPairingToken === undefined) {
+      delete process.env.PAIRING_API_TOKEN;
+    } else {
+      process.env.PAIRING_API_TOKEN = previousPairingToken;
+    }
+  }
+});
