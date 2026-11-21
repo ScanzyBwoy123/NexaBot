@@ -1238,3 +1238,94 @@ test('pairing endpoint rejects invalid phone numbers without requesting a code',
     }
   }
 });
+
+test('pairing endpoint blocks the fourth request within ten minutes', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousDeployerId = process.env.DEPLOYER_ID;
+  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
+  const previousPairingToken = process.env.PAIRING_API_TOKEN;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.DEPLOYER_ID = '233240000888';
+  process.env.ENABLE_WHATSAPP = 'true';
+  process.env.PAIRING_API_TOKEN = 'correct-secret-token';
+
+  let server;
+  let pairingCodeRequests = 0;
+
+  try {
+    ({ server } = startServer({
+      port: 0,
+      startWhatsApp: async () => ({
+        async requestPairingCode() {
+          pairingCodeRequests += 1;
+          return '87654321';
+        }
+      })
+    }));
+
+    await once(server, 'listening');
+    await new Promise(resolve => setImmediate(resolve));
+
+    const makeRequest = () => fetch(
+      `http://127.0.0.1:${server.address().port}/pairing/request`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer correct-secret-token'
+        },
+        body: JSON.stringify({
+          phoneNumber: '233241234567'
+        })
+      }
+    );
+
+    for (let i = 0; i < 3; i += 1) {
+      const response = await makeRequest();
+      assert.equal(response.status, 200);
+    }
+
+    const fourthResponse = await makeRequest();
+    const result = await fourthResponse.json();
+
+    assert.equal(fourthResponse.status, 429);
+    assert.equal(result.success, false);
+    assert.equal(
+      result.error,
+      'Too many pairing requests. Try again later.'
+    );
+    assert.equal(pairingCodeRequests, 3);
+    assert.ok(Number(fourthResponse.headers.get('retry-after')) > 0);
+  } finally {
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousDeployerId === undefined) {
+      delete process.env.DEPLOYER_ID;
+    } else {
+      process.env.DEPLOYER_ID = previousDeployerId;
+    }
+
+    if (previousEnableWhatsApp === undefined) {
+      delete process.env.ENABLE_WHATSAPP;
+    } else {
+      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
+    }
+
+    if (previousPairingToken === undefined) {
+      delete process.env.PAIRING_API_TOKEN;
+    } else {
+      process.env.PAIRING_API_TOKEN = previousPairingToken;
+    }
+  }
+});
