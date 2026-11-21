@@ -137,18 +137,6 @@ test('WhatsApp pairing requests a code using the supplied phone number', async (
   assert.equal(code, '12345678');
   assert.deepEqual(receivedArguments, ['233241234567', true]);
 });
-  } finally {
-    Module._load = originalLoad;
-
-    if (previousNumber === undefined) {
-      delete process.env.WHATSAPP_PAIRING_NUMBER;
-    } else {
-      process.env.WHATSAPP_PAIRING_NUMBER = previousNumber;
-    }
-
-    delete require.cache[require.resolve('../src/whatsapp')];
-  }
-});
 test('WhatsApp event handlers respond to all connection events including pairing code', () => {
   const { EventEmitter } = require('node:events');
   const { registerWhatsAppEvents } = require('../src/whatsapp');
