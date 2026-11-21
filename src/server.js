@@ -3,6 +3,7 @@
 const http = require('node:http');
 const crypto = require('node:crypto');
 const { createNexaBot } = require('./index');
+const { createSupabaseClient } = require('./supabase');
 function safeTokenMatch(provided, expected) {
   if (typeof provided !== 'string' || typeof expected !== 'string') {
     return false;
