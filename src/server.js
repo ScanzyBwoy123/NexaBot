@@ -140,16 +140,23 @@ function createRequestHandler(options = {}) {
     } catch (error) {
       console.error('NexaBot request error:', error.message);
 
+      
       if (!res.headersSent) {
-        res.writeHead(500, {
+        const isInvalidPhoneNumber =
+          error.message === 'Invalid international phone number.';
+
+        res.writeHead(isInvalidPhoneNumber ? 400 : 500, {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-store'
         });
 
         res.end(JSON.stringify({
           success: false,
-          error: 'Internal server error'
+          error: isInvalidPhoneNumber
+            ? error.message
+            : 'Internal server error'
         }));
+
       } else {
         res.destroy();
       }
