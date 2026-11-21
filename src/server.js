@@ -248,6 +248,7 @@ function createRequestHandler(options = {}) {
 }
 
 function startServer(options = {}) {
+  const supabase = options.supabase || createSupabaseClient();
   const config = validateConfiguration(options);
 
   const bot = createNexaBot({
