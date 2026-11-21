@@ -23,7 +23,7 @@ function validateConfiguration(options = {}) {
   return { developerIds, deployerId, port };
 }
 
-function createRequestHandler() {
+function createRequestHandler(options = {}) {
   return (req, res) => {
     try {
       if (req.method === 'GET' && req.url === '/health') {
