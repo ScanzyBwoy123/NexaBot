@@ -48,7 +48,7 @@ function readJsonBody(req) {
 }
 
 function createRequestHandler(options = {}) {
-  return (req, res) => {
+  return async (req, res) => {
     try {
       if (req.method === 'GET' && req.url === '/health') {
         res.writeHead(200, {
