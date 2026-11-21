@@ -1559,3 +1559,63 @@ test('pairing endpoint rejects GET requests', async () => {
     }
   }
 });
+test('pairing endpoint rejects requests when no API token is configured', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
+  const previousPairingToken = process.env.PAIRING_API_TOKEN;
+
+  process.env.DEVELOPER_IDS = '233241234567';
+  process.env.ENABLE_WHATSAPP = 'false';
+  delete process.env.PAIRING_API_TOKEN;
+
+  let server;
+
+  try {
+    ({ server } = startServer({ port: 0 }));
+    await once(server, 'listening');
+
+    const response = await fetch(
+      `http://127.0.0.1:${server.address().port}/pairing/request`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer some-token'
+        },
+        body: JSON.stringify({
+          phoneNumber: '233241234567'
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    assert.equal(response.status, 401);
+    assert.equal(result.success, false);
+    assert.equal(result.error, 'Unauthorized');
+  } finally {
+    if (server?.listening) {
+      const closed = once(server, 'close');
+      server.close();
+      await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
+    }
+
+    if (previousEnableWhatsApp === undefined) {
+      delete process.env.ENABLE_WHATSAPP;
+    } else {
+      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
+    }
+
+    if (previousPairingToken === undefined) {
+      delete process.env.PAIRING_API_TOKEN;
+    } else {
+      process.env.PAIRING_API_TOKEN = previousPairingToken;
+    }
+  }
+});
