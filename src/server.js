@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('node:http');
+const crypto = require('node:crypto');
 const { createNexaBot } = require('./index');
 const { startWhatsApp, requestPairingCode } = require('./whatsapp');
 function validateConfiguration(options = {}) {
