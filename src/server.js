@@ -103,9 +103,7 @@ function startServer(options = {}) {
 
     void whatsappStarter({
       commandEngine: bot,
-      onCode: code => {
-        console.log(`WhatsApp pairing code: ${code}`);
-      },
+      onCode: () => {},
       onReady: () => {
         console.log('NexaBot WhatsApp connection is ready.');
       },
