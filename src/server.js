@@ -76,7 +76,58 @@ function createRequestHandler(options = {}) {
 
         return;
       }
+          if (req.method === 'POST' && req.url === '/pairing/request') {
+        const expectedToken = (process.env.PAIRING_API_TOKEN || '').trim();
+        const authorization = req.headers.authorization || '';
+        const providedToken = authorization.startsWith('Bearer ')
+          ? authorization.slice(7)
+          : '';
 
+        if (!expectedToken || !safeTokenMatch(providedToken, expectedToken)) {
+          res.writeHead(401, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          });
+
+          res.end(JSON.stringify({
+            success: false,
+            error: 'Unauthorized'
+          }));
+
+          return;
+        }
+
+        const body = await readJsonBody(req);
+        const client = options.getWhatsAppClient?.();
+
+        if (!client) {
+          res.writeHead(503, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          });
+
+          res.end(JSON.stringify({
+            success: false,
+            error: 'WhatsApp is not ready.'
+          }));
+
+          return;
+        }
+
+        const code = await requestPairingCode(client, body.phoneNumber);
+
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        });
+
+        res.end(JSON.stringify({
+          success: true,
+          code
+        }));
+
+        return;
+      }
       res.writeHead(404, {
   'Content-Type': 'application/json',
   'Cache-Control': 'no-store'
