@@ -68,7 +68,9 @@ function createRequestHandler(options = {}) {
   const maxPairingAttempts = 3;
   return async (req, res) => {
     try {
-      if (req.method === 'GET' && req.url === '/health') {
+      const requestPath = new URL(req.url, 'http://localhost').pathname.replace(/\/+$/, '') || '/';
+
+      if (req.method === 'GET' && requestPath === '/health') {
         res.writeHead(200, {
           'Content-Type': 'application/json',
           'Cache-Control': 'no-store'
