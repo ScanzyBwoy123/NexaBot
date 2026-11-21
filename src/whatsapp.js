@@ -268,3 +268,10 @@ module.exports = {
     registerMessageHandler,
   startWhatsApp
 };
+module.exports = {
+  createWhatsAppClient,
+  registerWhatsAppEvents,
+  registerMessageHandler,
+  startWhatsApp,
+  requestPairingCode
+};
