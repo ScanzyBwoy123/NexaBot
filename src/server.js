@@ -78,7 +78,11 @@ function startServer(options = {}) {
     deployerId: config.deployerId
   });
 
-  const server = http.createServer(createRequestHandler());
+  let whatsappClient = null;
+
+const server = http.createServer(createRequestHandler({
+  getWhatsAppClient: () => whatsappClient
+}));
 
     server.on('error', error => {
     console.error('NexaBot server error:', error.message);
