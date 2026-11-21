@@ -1,7 +1,7 @@
 'use strict';
 
 const { createClient } = require('@supabase/supabase-js');
-
+const WebSocket = require('ws');
 function createSupabaseClient() {
   const url = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
