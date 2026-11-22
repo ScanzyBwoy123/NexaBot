@@ -876,3 +876,37 @@ test('ignores status events after a session shutdown has started', async () => {
 
   await stopPromise;
 });
+test('ignores late connection events while startup is stopping', async () => {
+  let finishStartup;
+  let handlers;
+  const client = createMockClient();
+
+  const manager = createSessionManager({
+    startWhatsApp: (options) => {
+      handlers = options;
+
+      return new Promise((resolve) => {
+        finishStartup = () => resolve(client);
+      });
+    }
+  });
+
+  const startPromise = manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const stopPromise = manager.stopSession(ACCOUNT_A);
+
+  handlers.onReady();
+
+  assert.equal(manager.getSession(ACCOUNT_A).status, 'starting');
+
+  finishStartup();
+
+  await startPromise;
+  await stopPromise;
+
+  assert.equal(client.destroyed, true);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
