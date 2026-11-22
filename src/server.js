@@ -516,11 +516,11 @@ const server = http.createServer(createRequestHandler({
 .then(async storageStatus => {
     console.log(`NexaBot persistent storage marker: ${storageStatus}`);
     if (supabase) {
-  await verifySupabaseConnection(supabase);
-  console.log('NexaBot Supabase connectivity check 
+      await verifySupabaseConnection(supabase);
+      console.log('NexaBot Supabase connectivity check passed.');
     } else if (require.main === module) {
-  throw new Error('Supabase client is not configured.');
-  }
+      throw new Error('Supabase client is not configured.');
+    }
     server.listen(config.port, () => {
       console.log(
         `NexaBot server listening on port ${server.address().port}`
