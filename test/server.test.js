@@ -245,8 +245,6 @@ test('health endpoint rejects unsupported HTTP methods', async () => {
     }
   }
 });
-const { createRequestHandler } = require('../src/server');
-
 test('unexpected request errors return a safe 500 response', () => {
   const handler = createRequestHandler();
 
