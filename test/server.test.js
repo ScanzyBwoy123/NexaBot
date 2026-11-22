@@ -2010,7 +2010,12 @@ test('registration creates a pending account successfully', async () => {
 test('registration rejects duplicate phone numbers', async () => {
   const previousSetting = process.env.ENABLE_PUBLIC_REGISTRATION;
   process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
-
+      auth: {
+      getUser: async () => ({
+        data: { user: { id: 'test-user-123' } },
+        error: null
+      })
+    },
   const supabase = {
     schema() {
       return this;
