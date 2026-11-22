@@ -3,7 +3,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { validateConfiguration } = require('../src/server');
+const {
+  validateConfiguration,
+  createRequestHandler
+} = require('../src/server');
 
 test('server requires at least one developer ID', () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
