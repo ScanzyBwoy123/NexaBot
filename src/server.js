@@ -313,6 +313,11 @@ function startServer(options = {}) {
 
   let whatsappClient = null;
 
+const sessionManager = createSessionManager({
+  startWhatsApp: options.startWhatsApp || startWhatsApp,
+  authRootDir: process.env.NEXABOT_AUTH_DIR
+});
+
 const server = http.createServer(createRequestHandler({
   getWhatsAppClient: () => whatsappClient,
   supabase
