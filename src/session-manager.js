@@ -47,12 +47,12 @@ function createSessionManager(options = {}) {
     sessions.set(accountId, session);
 
     try {
-      session.startPromise = startWhatsApp({
+            session.startPromise = startWhatsApp({
         commandEngine: options.commandEngine,
         clientId: `nexabot-${accountId}`,
         authDir: path.join(authRootDir, accountId),
 
-               onQR: () => {
+        onQR: () => {
           if (!session.stopping) {
             session.status = 'waiting_for_pairing';
           }
@@ -75,7 +75,19 @@ function createSessionManager(options = {}) {
             session.status = 'connected';
           }
         },
-       });
+
+        onAuthFailure: () => {
+          if (!session.stopping) {
+            session.status = 'auth_failed';
+          }
+        },
+
+        onDisconnected: () => {
+          if (!session.stopping) {
+            session.status = 'disconnected';
+          }
+        }
+      });
         onAuthFailure: () => {
           if (!session.stopping) {
             session.status = 'auth_failed';
