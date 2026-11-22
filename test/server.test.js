@@ -2704,3 +2704,73 @@ test('session start does not create duplicate sessions', async () => {
   assert.equal(secondResponse.result.session.accountId, 'account-uuid-1');
   assert.equal(startCalls, 1);
 });
+test('session start handles WhatsApp startup failures', async () => {
+  const { Readable } = require('node:stream');
+
+  const supabase = {
+    auth: {
+      getUser: async () => ({
+        data: { user: { id: 'authenticated-user-1' } },
+        error: null
+      })
+    },
+    schema: () => ({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: {
+                id: 'account-uuid-1',
+                phone_e164: '233241234567',
+                account_status: 'pairing_pending'
+              },
+              error: null
+            })
+          })
+        })
+      })
+    })
+  };
+
+  const handler = createRequestHandler({
+    supabase,
+    sessionManager: {
+      getSession: () => null,
+      startSession: async () => {
+        throw new Error('WhatsApp connection failed');
+      }
+    },
+    commandEngine: {}
+  });
+
+  const req = Readable.from(['{}']);
+  req.method = 'POST';
+  req.url = '/session/start';
+  req.headers = {
+    authorization: 'Bearer valid-access-token'
+  };
+
+  let statusCode;
+  let responseBody;
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  await handler(req, res);
+
+  const result = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 500);
+  assert.equal(result.success, false);
+  assert.equal(result.error, 'Internal server error.');
+  assert.equal(responseBody.includes('WhatsApp connection failed'), false);
+});
