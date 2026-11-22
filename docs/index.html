@@ -137,10 +137,82 @@
   </main>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>  
   <script>
-    document.getElementById('pairingForm').addEventListener('submit', event => {
-      event.preventDefault();
-      document.getElementById('notice').style.display = 'block';
-    });
-  </script>
+  const SUPABASE_URL = 'https://dchmgbhywyvprnhcjuma.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_Z7IAXc3Mcot4omAC6Al5EQ_7FR2vk99';
+  const NEXABOT_API = 'https://p01--nexabot--6tbybh762pv4.code.run';
+
+  const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+  const loginForm = document.getElementById('loginForm');
+  const notice = document.getElementById('notice');
+
+  function showNotice(message) {
+    notice.textContent = message;
+    notice.style.display = 'block';
+  }
+
+  loginForm.addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const button = loginForm.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.textContent = 'Signing in...';
+
+    try {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      const { data, error } =
+        await supabaseClient.auth.signInWithPassword({
+          email,
+          password
+        });
+
+      if (error) throw error;
+
+      const accessToken = data.session?.access_token;
+
+      if (!accessToken) {
+        throw new Error('Login succeeded, but no access token was returned.');
+      }
+
+      showNotice('Login successful. Starting your NexaBot session...');
+
+      const response = await fetch(`${NEXABOT_API}/session/start`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Could not start your NexaBot session.');
+      }
+
+      showNotice(
+        'Your account is authenticated and your WhatsApp session has started. Pairing setup is the next step.'
+      );
+
+      button.textContent = 'Signed in';
+
+    } catch (error) {
+      showNotice(error.message || 'Sign-in failed. Please try again.');
+      button.disabled = false;
+      button.textContent = 'Sign in to NexaBot';
+    }
+  });
+
+  document.getElementById('pairingForm').addEventListener('submit', event => {
+    event.preventDefault();
+    showNotice('Please sign in before requesting WhatsApp pairing.');
+  });
+</script>
 </body>
 </html>
