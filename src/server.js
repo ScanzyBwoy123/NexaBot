@@ -368,7 +368,8 @@ const sessionManager = createSessionManager({
 
 const server = http.createServer(createRequestHandler({
   sessionManager,
-  supabase
+  supabase,
+  commandEngine: bot
 }));
 
     server.on('error', error => {
