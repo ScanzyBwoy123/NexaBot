@@ -233,9 +233,23 @@ async function startWhatsApp(options = {}) {
   registerWhatsAppEvents(client, options);
   registerMessageHandler(client, commandEngine, options);
 
-  try {
+    try {
     await client.initialize();
   } catch (error) {
+    try {
+      if (typeof client.destroy === 'function') {
+        await client.destroy();
+      }
+    } catch (cleanupError) {
+      if (typeof options.onCleanupError === 'function') {
+        try {
+          options.onCleanupError(cleanupError);
+        } catch {
+          // Prevent cleanup-handler failures from escaping.
+        }
+      }
+    }
+
     if (typeof options.onError === 'function') {
       try {
         options.onError(error);
