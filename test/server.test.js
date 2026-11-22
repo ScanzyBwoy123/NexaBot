@@ -279,7 +279,9 @@ test('unexpected request errors return a safe 500 response', () => {
 
   try {
     console.error = (...args) => {
-      loggedError = args.join(' ');
+      loggedError = args.map(arg =>
+  typeof arg === 'string' ? arg : JSON.stringify(arg)
+).join(' ');
     };
 
     handler(req, res);
