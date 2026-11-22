@@ -2369,4 +2369,113 @@ test('pairing endpoint verifies supplied Supabase access tokens', async () => {
       process.env.PAIRING_API_TOKEN = previousToken;
     }
   }
+});test('pairing endpoint uses only the authenticated account and its stored phone number', async () => {
+  const { Readable } = require('node:stream');
+
+  let requestedAccountId;
+  let requestedPhoneNumber;
+  let requestedIsMobile;
+
+  const supabase = {
+    auth: {
+      getUser: async (token) => {
+        assert.equal(token, 'valid-access-token');
+        return {
+          data: { user: { id: 'authenticated-user-1' } },
+          error: null
+        };
+      }
+    },
+    schema(schemaName) {
+      assert.equal(schemaName, 'nexabot');
+
+      return {
+        from(tableName) {
+          assert.equal(tableName, 'accounts');
+
+          return {
+            select(columns) {
+              assert.equal(
+                columns,
+                'id, phone_e164, account_status'
+              );
+
+              return {
+                eq(column, value) {
+                  assert.equal(column, 'auth_user_id');
+                  assert.equal(value, 'authenticated-user-1');
+
+                  return {
+                    maybeSingle: async () => ({
+                      data: {
+                        id: 'account-uuid-1',
+                        phone_e164: '233241234567',
+                        account_status: 'pairing_pending'
+                      },
+                      error: null
+                    })
+                  };
+                }
+              };
+            }
+          };
+        }
+      };
+    }
+  };
+
+  const sessionManager = {
+    getClient(accountId) {
+      requestedAccountId = accountId;
+
+      return {
+        requestPairingCode: async (phoneNumber, isMobile) => {
+          requestedPhoneNumber = phoneNumber;
+          requestedIsMobile = isMobile;
+          return '87654321';
+        }
+      };
+    }
+  };
+
+  const handler = createRequestHandler({
+    supabase,
+    sessionManager
+  });
+
+  const req = Readable.from([
+    JSON.stringify({ phoneNumber: '999999999999' })
+  ]);
+
+  req.method = 'POST';
+  req.url = '/pairing/request';
+  req.headers = {
+    authorization: 'Bearer valid-access-token'
+  };
+
+  let statusCode;
+  let responseBody;
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  await handler(req, res);
+
+  const result = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 200);
+  assert.equal(result.success, true);
+  assert.equal(result.code, '87654321');
+  assert.equal(requestedAccountId, 'account-uuid-1');
+  assert.equal(requestedPhoneNumber, '233241234567');
+  assert.equal(requestedIsMobile, true);
 });
