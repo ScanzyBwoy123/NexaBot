@@ -407,3 +407,26 @@ test('stopping one account does not affect another account still starting', asyn
   assert.equal(manager.getClient(ACCOUNT_B), secondClient);
   assert.equal(secondClient.destroyed, false);
 });
+test('removes a session when WhatsApp client shutdown fails', async () => {
+  const client = {
+    async destroy() {
+      throw new Error('Shutdown failed');
+    }
+  };
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => client
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await assert.rejects(
+    manager.stopSession(ACCOUNT_A),
+    { message: 'Shutdown failed' }
+  );
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
