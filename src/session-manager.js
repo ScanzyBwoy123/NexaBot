@@ -120,24 +120,33 @@ async function stopSession(accountId) {
     return false;
   }
 
-  if (session.startPromise) {
+  // Reuse an ongoing shutdown instead of destroying the client twice.
+  if (session.stopPromise) {
+    return session.stopPromise;
+  }
+
+  session.stopPromise = (async () => {
+    if (session.startPromise) {
+      try {
+        session.client = await session.startPromise;
+      } catch {
+        sessions.delete(accountId);
+        return true;
+      }
+    }
+
     try {
-      session.client = await session.startPromise;
-    } catch {
+      if (session.client && typeof session.client.destroy === 'function') {
+        await session.client.destroy();
+      }
+    } finally {
       sessions.delete(accountId);
-      return true;
     }
-  }
 
-  try {
-    if (session.client && typeof session.client.destroy === 'function') {
-      await session.client.destroy();
-    }
-  } finally {
-    sessions.delete(accountId);
-  }
+    return true;
+  })();
 
-  return true;
+  return session.stopPromise;
 }
   return {
     startSession,
