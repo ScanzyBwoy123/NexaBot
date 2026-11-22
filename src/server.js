@@ -513,7 +513,7 @@ const server = http.createServer(createRequestHandler({
   });
 
   verifyPersistentStorage()
-.then(storageStatus => {
+.then(async storageStatus => {
     console.log(`NexaBot persistent storage marker: ${storageStatus}`);
     server.listen(config.port, () => {
       console.log(
