@@ -137,6 +137,7 @@ async function stopSession(accountId) {
   if (session.stopPromise) {
     return session.stopPromise;
   }
+  session.stopping = true;
 
   session.stopPromise = (async () => {
     if (session.startPromise) {
