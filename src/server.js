@@ -485,11 +485,23 @@ const server = http.createServer(createRequestHandler({
     }
   });
 
-  server.listen(config.port, () => {
-    console.log(
-      `NexaBot server listening on port ${server.address().port}`
-    );
-    console.log(`Registered commands: ${bot.list().length}`);
+  verifyPersistentStorage()
+  .then(() => {
+    server.listen(config.port, () => {
+      console.log(
+        `NexaBot server listening on port ${server.address().port}`
+      );
+      console.log(`Registered commands: ${bot.list().length}`);
+      console.log('NexaBot persistent storage check passed.');
+    });
+  })
+  .catch(error => {
+    console.error('NexaBot persistent storage check failed:', error.message);
+    process.exitCode = 1;
+
+    if (typeof options.onError === 'function') {
+      options.onError(error);
+    }
   });
     return { server, bot, sessionManager };
 }
