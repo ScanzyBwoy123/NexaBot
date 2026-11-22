@@ -746,36 +746,31 @@ test('server does not start WhatsApp when it is disabled', async () => {
     }
   }
 });
-test('server starts WhatsApp when it is enabled', async () => {
+test('server does not start a global WhatsApp session', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousDeployerId = process.env.DEPLOYER_ID;
   const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
 
   process.env.DEVELOPER_IDS = '233241234567';
-  process.env.DEPLOYER_ID = '233240000888';
   process.env.ENABLE_WHATSAPP = 'true';
 
   let whatsappStartCount = 0;
-  let receivedOptions;
   let server;
 
   try {
-    ({ server } = startServer({
+    const result = startServer({
       port: 0,
-      startWhatsApp: options => {
+      startWhatsApp: () => {
         whatsappStartCount++;
-        receivedOptions = options;
         return Promise.resolve();
       }
-    }));
+    });
+
+    server = result.server;
 
     await once(server, 'listening');
 
-    assert.equal(whatsappStartCount, 1);
-    assert.ok(receivedOptions.commandEngine);
-    assert.equal(typeof receivedOptions.onCode, 'function');
-    assert.equal(typeof receivedOptions.onReady, 'function');
-    assert.equal(typeof receivedOptions.onError, 'function');
+    assert.equal(whatsappStartCount, 0);
+    assert.ok(result.sessionManager);
   } finally {
     if (server?.listening) {
       const closed = once(server, 'close');
@@ -787,12 +782,6 @@ test('server starts WhatsApp when it is enabled', async () => {
       delete process.env.DEVELOPER_IDS;
     } else {
       process.env.DEVELOPER_IDS = previousDeveloperIds;
-    }
-
-    if (previousDeployerId === undefined) {
-      delete process.env.DEPLOYER_ID;
-    } else {
-      process.env.DEPLOYER_ID = previousDeployerId;
     }
 
     if (previousEnableWhatsApp === undefined) {
