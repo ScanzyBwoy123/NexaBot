@@ -2540,3 +2540,79 @@ test('session start creates a session for the authenticated account', async () =
   assert.equal(startedOptions.phoneNumber, '233241234567');
   assert.equal(startedOptions.commandEngine, commandEngine);
 });
+test('session start cannot create a session for another user account', async () => {
+  const { Readable } = require('node:stream');
+  let sessionStarted = false;
+  let accountLookupUserId;
+
+  const supabase = {
+    auth: {
+      getUser: async () => ({
+        data: { user: { id: 'different-user-1' } },
+        error: null
+      })
+    },
+    schema: () => ({
+      from: () => ({
+        select: () => ({
+          eq: (column, value) => {
+            assert.equal(column, 'auth_user_id');
+            accountLookupUserId = value;
+
+            return {
+              maybeSingle: async () => ({
+                data: null,
+                error: null
+              })
+            };
+          }
+        })
+      })
+    })
+  };
+
+  const sessionManager = {
+    getSession: () => null,
+    startSession: async () => {
+      sessionStarted = true;
+    }
+  };
+
+  const handler = createRequestHandler({
+    supabase,
+    sessionManager,
+    commandEngine: {}
+  });
+
+  const req = Readable.from(['{}']);
+  req.method = 'POST';
+  req.url = '/session/start';
+  req.headers = {
+    authorization: 'Bearer valid-access-token'
+  };
+
+  let statusCode;
+  let responseBody;
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  await handler(req, res);
+
+  const result = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 404);
+  assert.equal(result.success, false);
+  assert.equal(result.error, 'NexaBot account not found.');
+  assert.equal(accountLookupUserId, 'different-user-1');
+  assert.equal(sessionStarted, false);
+});
