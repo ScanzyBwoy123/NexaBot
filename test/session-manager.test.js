@@ -1003,3 +1003,34 @@ test('cleans up the stopping session after startup fails without affecting anoth
   assert.equal(manager.getClient(ACCOUNT_B), secondClient);
   assert.equal(secondClient.destroyed, false);
 });
+test('ignores every status callback after shutdown begins', async () => {
+  const mock = createMockStartWhatsApp();
+
+  const manager = createSessionManager({
+    startWhatsApp: mock.startWhatsApp
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const handlers = mock.calls[0].options;
+  const stopPromise = manager.stopSession(ACCOUNT_A);
+
+  handlers.onQR('late-qr');
+  handlers.onCode('late-code');
+  handlers.onAuthenticated();
+  handlers.onReady();
+  handlers.onAuthFailure();
+  handlers.onDisconnected();
+
+  assert.equal(
+    manager.getSession(ACCOUNT_A).status,
+    'starting'
+  );
+
+  await stopPromise;
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
