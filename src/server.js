@@ -161,13 +161,16 @@ function createRequestHandler(options = {}) {
         return;
       }
           if (req.method === 'POST' && req.url === '/pairing/request') {
-        const expectedToken = (process.env.PAIRING_API_TOKEN || '').trim();
-        const authorization = req.headers.authorization || '';
-        const providedToken = authorization.startsWith('Bearer ')
+                const authorization = req.headers.authorization || '';
+        const accessToken = authorization.startsWith('Bearer ')
           ? authorization.slice(7)
           : '';
 
-        if (!expectedToken || !safeTokenMatch(providedToken, expectedToken)) {
+        const user = supabaseAuth
+          ? await supabaseAuth.verifyAccessToken(accessToken)
+          : null;
+
+        if (!user) {
           res.writeHead(401, {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-store'
