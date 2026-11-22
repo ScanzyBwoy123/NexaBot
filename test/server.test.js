@@ -1234,100 +1234,96 @@ test('pairing endpoint rejects invalid phone numbers without requesting a code',
   assert.equal(pairingCodeRequested, false);
 });
 test('pairing endpoint blocks the fourth request within ten minutes', async () => {
-  const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousDeployerId = process.env.DEPLOYER_ID;
-  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
-  const previousPairingToken = process.env.PAIRING_API_TOKEN;
-
-  process.env.DEVELOPER_IDS = '233241234567';
-  process.env.DEPLOYER_ID = '233240000888';
-  process.env.ENABLE_WHATSAPP = 'true';
-  process.env.PAIRING_API_TOKEN = 'correct-secret-token';
-
-  let server;
+  const { Readable } = require('node:stream');
   let pairingCodeRequests = 0;
 
-  try {
-    ({ server } = startServer({
-      port: 0,
-      startWhatsApp: async () => ({
+  const handler = createRequestHandler({
+    supabase: {
+      auth: {
+        getUser: async () => ({
+          data: { user: { id: 'authenticated-user-1' } },
+          error: null
+        })
+      },
+      schema: () => ({
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: {
+                  id: 'account-uuid-1',
+                  phone_e164: '233241234567',
+                  account_status: 'pairing_pending'
+                },
+                error: null
+              })
+            })
+          })
+        })
+      })
+    },
+    sessionManager: {
+      getClient: () => ({
         async requestPairingCode() {
           pairingCodeRequests += 1;
           return '87654321';
         }
       })
-    }));
+    }
+  });
 
-    await once(server, 'listening');
-    await new Promise(resolve => setImmediate(resolve));
+  const makeRequest = async () => {
+    const req = Readable.from(['{}']);
+    req.method = 'POST';
+    req.url = '/pairing/request';
+    req.headers = {
+      authorization: 'Bearer valid-access-token'
+    };
 
-    const makeRequest = () => fetch(
-      `http://127.0.0.1:${server.address().port}/pairing/request`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer correct-secret-token'
-        },
-        body: JSON.stringify({
-          phoneNumber: '233241234567'
-        })
+    let statusCode;
+    let responseBody;
+    let responseHeaders;
+
+    const res = {
+      headersSent: false,
+      writeHead(status, headers) {
+        statusCode = status;
+        responseHeaders = headers;
+        this.headersSent = true;
+      },
+      end(body) {
+        responseBody = body;
       }
-    );
+    };
 
- for (let i = 0; i < 3; i += 1) {
-  const response = await makeRequest();
-  const result = await response.json();
+    await handler(req, res);
 
-  assert.equal(response.status, 200);
-  assert.equal(result.success, true);
-  assert.equal(result.code, '87654321');
-}
+    return {
+      statusCode,
+      headers: responseHeaders,
+      result: JSON.parse(responseBody)
+    };
+  };
 
-    const fourthResponse = await makeRequest();
-    const result = await fourthResponse.json();
+  for (let i = 0; i < 3; i += 1) {
+    const response = await makeRequest();
 
-    assert.equal(fourthResponse.status, 429);
-    assert.equal(result.success, false);
-    assert.equal(
-      result.error,
-      'Too many pairing requests. Try again later.'
-    );
-    assert.equal(pairingCodeRequests, 3);
-    assert.ok(Number(fourthResponse.headers.get('retry-after')) > 0);
-  } finally {
-    if (server?.listening) {
-      const closed = once(server, 'close');
-      server.close();
-      await closed;
-    }
-
-    if (previousDeveloperIds === undefined) {
-      delete process.env.DEVELOPER_IDS;
-    } else {
-      process.env.DEVELOPER_IDS = previousDeveloperIds;
-    }
-
-    if (previousDeployerId === undefined) {
-      delete process.env.DEPLOYER_ID;
-    } else {
-      process.env.DEPLOYER_ID = previousDeployerId;
-    }
-
-    if (previousEnableWhatsApp === undefined) {
-      delete process.env.ENABLE_WHATSAPP;
-    } else {
-      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
-    }
-
-    if (previousPairingToken === undefined) {
-      delete process.env.PAIRING_API_TOKEN;
-    } else {
-      process.env.PAIRING_API_TOKEN = previousPairingToken;
-    }
+    assert.equal(response.statusCode, 200);
+    assert.equal(response.result.success, true);
+    assert.equal(response.result.code, '87654321');
   }
-});
 
+  const fourthResponse = await makeRequest();
+
+  assert.equal(fourthResponse.statusCode, 429);
+  assert.equal(fourthResponse.result.success, false);
+  assert.equal(
+    fourthResponse.result.error,
+    'Too many pairing requests. Try again later.'
+  );
+  assert.equal(pairingCodeRequests, 3);
+  assert.ok(Number(fourthResponse.headers['Retry-After']) > 0);
+});
 test('pairing endpoint blocks retries for 60 seconds after a failed request', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
   const previousDeployerId = process.env.DEPLOYER_ID;
