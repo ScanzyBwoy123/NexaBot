@@ -2403,3 +2403,54 @@ test('pairing endpoint verifies supplied Supabase access tokens', async () => {
   assert.equal(requestedPhoneNumber, '233241234567');
   assert.equal(requestedIsMobile, true);
 });
+test('session start rejects unauthenticated requests', async () => {
+  const { Readable } = require('node:stream');
+  let sessionStarted = false;
+
+  const handler = createRequestHandler({
+    supabase: {
+      auth: {
+        getUser: async () => ({
+          data: { user: null },
+          error: new Error('Invalid token')
+        })
+      }
+    },
+    sessionManager: {
+      getSession: () => null,
+      startSession: async () => {
+        sessionStarted = true;
+      }
+    },
+    commandEngine: {}
+  });
+
+  const req = Readable.from(['{}']);
+  req.method = 'POST';
+  req.url = '/session/start';
+  req.headers = {};
+
+  let statusCode;
+  let responseBody;
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  await handler(req, res);
+
+  const result = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 401);
+  assert.equal(result.success, false);
+  assert.equal(result.error, 'Unauthorized');
+  assert.equal(sessionStarted, false);
+});
