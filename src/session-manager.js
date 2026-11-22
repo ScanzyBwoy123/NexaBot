@@ -129,6 +129,18 @@ async function stopSession(accountId) {
     }
   }
 
+  try {
+    if (session.client && typeof session.client.destroy === 'function') {
+      await session.client.destroy();
+    }
+  } finally {
+    sessions.delete(accountId);
+  }
+
+  return true;
+}
+  }
+
   if (session.client && typeof session.client.destroy === 'function') {
     await session.client.destroy();
   }
