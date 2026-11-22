@@ -1991,3 +1991,76 @@ test('registration creates a pending account successfully', async () => {
     }
   }
 });
+test('registration rejects duplicate phone numbers', async () => {
+  const previousSetting = process.env.ENABLE_PUBLIC_REGISTRATION;
+  process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
+
+  const supabase = {
+    schema() {
+      return this;
+    },
+    from() {
+      return this;
+    },
+    insert(record) {
+      this.insertedRecord = record;
+      return this;
+    },
+    select() {
+      return this;
+    },
+    single: async () => ({
+      data: null,
+      error: {
+        code: '23505',
+        message: 'Duplicate key'
+      }
+    })
+  };
+
+  const handler = createRequestHandler({ supabase });
+  let statusCode;
+  let responseBody;
+
+  const { Readable } = require('node:stream');
+  const req = Readable.from([
+    JSON.stringify({ phoneNumber: '+233 24 123 4567' })
+  ]);
+
+  req.method = 'POST';
+  req.url = '/accounts/register';
+  req.headers = {};
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  try {
+    await handler(req, res);
+
+    const data = JSON.parse(responseBody);
+
+    assert.equal(statusCode, 409);
+    assert.equal(data.success, false);
+    assert.equal(data.error, 'ACCOUNT_ALREADY_EXISTS');
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+    assert.deepEqual(supabase.insertedRecord, {
+      phone_e164: '233241234567',
+      account_status: 'pairing_pending'
+    });
+  } finally {
+    if (previousSetting === undefined) {
+      delete process.env.ENABLE_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ENABLE_PUBLIC_REGISTRATION = previousSetting;
+    }
+  }
+});
