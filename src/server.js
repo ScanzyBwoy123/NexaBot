@@ -348,6 +348,7 @@ const sessionManager = createSessionManager({
 
 const server = http.createServer(createRequestHandler({
   getWhatsAppClient: () => whatsappClient,
+  sessionManager,
   supabase
 }));
 
