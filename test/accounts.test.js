@@ -149,14 +149,24 @@ test('hides database errors from callers', async () => {
     select() {
       return this;
     },
-        () => service.registerPendingAccount(
-      '233241234567',
-      '11111111-1111-4111-8111-111111111111'
-    ),
+    single: async () => ({
       data: null,
       error: { code: 'DATABASE_ERROR', message: 'Private database details' }
     })
   };
+
+  const service = createAccountService(supabase);
+
+  await assert.rejects(
+    () => service.registerPendingAccount(
+      '233241234567',
+      '11111111-1111-4111-8111-111111111111'
+    ),
+    {
+      message: 'Account registration failed.'
+    }
+  );
+});
 
   const service = createAccountService(supabase);
 
