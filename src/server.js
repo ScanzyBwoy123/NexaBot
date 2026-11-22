@@ -392,24 +392,6 @@ const server = http.createServer(createRequestHandler({
     );
     console.log(`Registered commands: ${bot.list().length}`);
   });
-   if (process.env.ENABLE_WHATSAPP === 'true') {
-        const whatsappStarter = options.startWhatsApp || startWhatsApp;
-
-    void whatsappStarter({
-      commandEngine: bot,
-      onCode: () => {},
-      onReady: () => {
-        console.log('NexaBot WhatsApp connection is ready.');
-      },
-      onError: error => {
-        console.error('WhatsApp startup error:', error.message);
-      }
-       }).then(client => {
-      whatsappClient = client;
-    }).catch(error => {
-      console.error('WhatsApp initialization failed:', error.message);
-    });
-  }
     return { server, bot, sessionManager };
 }
 
