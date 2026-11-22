@@ -817,3 +817,37 @@ test('keeps another account active when startup throws synchronously', async () 
   assert.equal(manager.getClient(ACCOUNT_B), secondClient);
   assert.equal(secondClient.destroyed, false);
 });
+test('ignores late status events from a previous session after restart', async () => {
+  const mock = createMockStartWhatsApp();
+
+  const manager = createSessionManager({
+    startWhatsApp: mock.startWhatsApp
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const oldHandlers = mock.calls[0].options;
+
+  await manager.stopSession(ACCOUNT_A);
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const newHandlers = mock.calls[1].options;
+
+  oldHandlers.onReady();
+
+  assert.equal(manager.getSession(ACCOUNT_A).status, 'starting');
+
+  newHandlers.onQR('new-session-qr');
+
+  assert.equal(
+    manager.getSession(ACCOUNT_A).status,
+    'waiting_for_pairing'
+  );
+});
