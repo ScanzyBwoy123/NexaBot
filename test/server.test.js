@@ -1906,3 +1906,88 @@ test('registration returns 503 when Supabase is unavailable', async () => {
     }
   }
 });
+test('registration creates a pending account successfully', async () => {
+  const previousSetting = process.env.ENABLE_PUBLIC_REGISTRATION;
+  process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
+
+  const expectedAccount = {
+    id: 'test-account-123',
+    phoneNumber: '233241234567',
+    status: 'pairing_pending',
+    createdAt: '2026-11-22T00:00:00.000Z'
+  };
+
+  let insertedAccount;
+
+  const supabase = {
+    schema(schemaName) {
+      assert.equal(schemaName, 'nexabot');
+      return this;
+    },
+    from(tableName) {
+      assert.equal(tableName, 'accounts');
+      return this;
+    },
+    insert(record) {
+      insertedAccount = record;
+      return this;
+    },
+    select() {
+      return this;
+    },
+    single: async () => ({
+      data: {
+        id: expectedAccount.id,
+        phone_e164: expectedAccount.phoneNumber,
+        account_status: expectedAccount.status,
+        created_at: expectedAccount.createdAt
+      },
+      error: null
+    })
+  };
+
+  const handler = createRequestHandler({ supabase });
+  let statusCode;
+  let responseBody;
+
+  const { Readable } = require('node:stream');
+  const req = Readable.from([
+    JSON.stringify({ phoneNumber: '+233 24 123 4567' })
+  ]);
+  req.method = 'POST';
+  req.url = '/accounts/register';
+  req.headers = {};
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  try {
+    await handler(req, res);
+
+    const data = JSON.parse(responseBody);
+
+    assert.equal(statusCode, 201);
+    assert.equal(data.success, true);
+    assert.deepEqual(data.account, expectedAccount);
+    assert.deepEqual(insertedAccount, {
+      phone_e164: '233241234567',
+      account_status: 'pairing_pending'
+    });
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+  } finally {
+    if (previousSetting === undefined) {
+      delete process.env.ENABLE_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ENABLE_PUBLIC_REGISTRATION = previousSetting;
+    }
+  }
+});
