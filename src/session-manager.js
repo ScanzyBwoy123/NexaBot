@@ -110,23 +110,33 @@ function createSessionManager(options = {}) {
     return sessions.get(accountId)?.client || null;
   }
 
-  async function stopSession(accountId) {
-    validateAccountId(accountId);
+  
+async function stopSession(accountId) {
+  validateAccountId(accountId);
 
-    const session = sessions.get(accountId);
+  const session = sessions.get(accountId);
 
-    if (!session) {
-      return false;
-    }
-
-    if (session.client && typeof session.client.destroy === 'function') {
-      await session.client.destroy();
-    }
-
-    sessions.delete(accountId);
-
-    return true;
+  if (!session) {
+    return false;
   }
+
+  if (session.startPromise) {
+    try {
+      session.client = await session.startPromise;
+    } catch {
+      sessions.delete(accountId);
+      return true;
+    }
+  }
+
+  if (session.client && typeof session.client.destroy === 'function') {
+    await session.client.destroy();
+  }
+
+  sessions.delete(accountId);
+
+  return true;
+}
 
   return {
     startSession,
