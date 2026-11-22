@@ -4,6 +4,7 @@ const http = require('node:http');
 const crypto = require('node:crypto');
 const { createNexaBot } = require('./index');
 const { createSupabaseClient } = require('./supabase');
+const { createAccountService } = require('./accounts');
 function safeTokenMatch(provided, expected) {
   if (typeof provided !== 'string' || typeof expected !== 'string') {
     return false;
@@ -82,6 +83,52 @@ function createRequestHandler(options = {}) {
           service: 'NexaBot'
         }));
 
+        return;
+      }
+            if (req.method === 'POST' && requestPath === '/accounts/register') {
+        const sendJson = (status, data) => {
+          res.writeHead(status, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          });
+          res.end(JSON.stringify(data));
+        };
+
+        if (process.env.ENABLE_PUBLIC_REGISTRATION !== 'true') {
+          sendJson(503, {
+            success: false,
+            error: 'Registration is temporarily unavailable.'
+          });
+          return;
+        }
+
+        if (!options.supabase) {
+          sendJson(503, {
+            success: false,
+            error: 'Account service is unavailable.'
+          });
+          return;
+        }
+
+        const body = await readJsonBody(req);
+        const accountService = createAccountService(options.supabase);
+
+        const result = await accountService.registerPendingAccount(
+          body.phoneNumber
+        );
+
+        if (!result.success) {
+          sendJson(409, {
+            success: false,
+            error: result.error
+          });
+          return;
+        }
+
+        sendJson(201, {
+          success: true,
+          account: result.account
+        });
         return;
       }
           if (req.method === 'POST' && req.url === '/pairing/request') {
