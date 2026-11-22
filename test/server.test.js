@@ -2771,6 +2771,6 @@ test('session start handles WhatsApp startup failures', async () => {
 
   assert.equal(statusCode, 500);
   assert.equal(result.success, false);
-  assert.equal(result.error, 'Internal server error.');
+  assert.equal(result.error, 'Internal server error');
   assert.equal(responseBody.includes('WhatsApp connection failed'), false);
 });
