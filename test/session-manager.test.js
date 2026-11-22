@@ -732,3 +732,21 @@ test('removes a session when the client has no destroy method', async () => {
   assert.equal(manager.getSession(ACCOUNT_A), null);
   assert.equal(manager.getClient(ACCOUNT_A), null);
 });
+test('removes a session when WhatsApp startup throws synchronously', async () => {
+  const manager = createSessionManager({
+    startWhatsApp: () => {
+      throw new Error('Synchronous startup failure');
+    }
+  });
+
+  await assert.rejects(
+    manager.startSession({
+      accountId: ACCOUNT_A,
+      commandEngine: { handle: async () => {} }
+    }),
+    { message: 'Synchronous startup failure' }
+  );
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+  assert.equal(manager.getClient(ACCOUNT_A), null);
+});
