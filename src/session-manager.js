@@ -46,7 +46,7 @@ function createSessionManager(options = {}) {
     sessions.set(accountId, session);
 
     try {
-      const client = await startWhatsApp({
+      session.startPromise = startWhatsApp({
         commandEngine: options.commandEngine,
         clientId: `nexabot-${accountId}`,
         authDir: path.join(authRootDir, accountId),
@@ -75,7 +75,7 @@ function createSessionManager(options = {}) {
           session.status = 'disconnected';
         }
       });
-
+      const client = await session.startPromise;
       session.client = client;
 
       return {
