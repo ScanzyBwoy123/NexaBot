@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080d19">
+  <title>NexaBot | WhatsApp Pairing</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: radial-gradient(circle at top, #17294a, #080d19 65%);
+      color: #f4f7ff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+    }
+    .container { width: 100%; max-width: 460px; }
+    .brand { text-align: center; margin-bottom: 28px; }
+    .logo {
+      width: 66px; height: 66px; margin: auto auto 14px;
+      display: grid; place-items: center;
+      background: #163d35; border: 1px solid #25d6a0;
+      border-radius: 20px; font-size: 30px;
+    }
+    h1 { margin: 0; font-size: 30px; }
+    .subtitle { color: #9eacc4; margin-top: 9px; }
+    .panel {
+      background: rgba(18, 29, 49, .96);
+      border: 1px solid #293b58;
+      border-radius: 20px;
+      padding: 26px;
+      box-shadow: 0 20px 60px #0006;
+    }
+    h2 { font-size: 21px; margin: 0 0 10px; }
+    .description { color: #aab7cc; line-height: 1.6; font-size: 14px; }
+    label { display: block; margin: 22px 0 9px; font-size: 14px; }
+    input {
+      width: 100%; padding: 15px;
+      border-radius: 11px; border: 1px solid #405474;
+      background: #0b1425; color: white; font-size: 16px;
+      outline: none;
+    }
+    input:focus { border-color: #25d6a0; }
+    button {
+      width: 100%; margin-top: 17px; padding: 15px;
+      border: 0; border-radius: 11px;
+      background: #20c997; color: #061b16;
+      font-size: 16px; font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .notice {
+      display: none; margin-top: 17px; padding: 13px;
+      border-radius: 10px; font-size: 14px; line-height: 1.5;
+      background: #102b27; color: #8ff0ce;
+    }
+    .steps {
+      margin-top: 22px; padding-top: 18px;
+      border-top: 1px solid #293b58;
+      color: #aab7cc; font-size: 13px; line-height: 1.8;
+    }
+    .footer { text-align: center; color: #71819c; font-size: 12px; margin-top: 22px; }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="brand">
+      <div class="logo">⚡</div>
+      <h1>NexaBot</h1>
+      <div class="subtitle">Connect your WhatsApp account</div>
+    </header>
+
+    <section class="panel">
+      <h2>WhatsApp Pairing</h2>
+      <p class="description">
+        Enter your WhatsApp number with its country code to begin the
+        account connection process.
+      </p>
+
+      <form id="pairingForm">
+        <label for="phoneNumber">WhatsApp phone number</label>
+        <input
+          id="phoneNumber"
+          type="tel"
+          placeholder="233241234567"
+          autocomplete="tel"
+          required
+        >
+        <button type="submit" disabled>
+          Pairing temporarily unavailable
+        </button>
+      </form>
+
+      <div class="notice" id="notice" role="status">
+        The pairing service is being prepared. Live pairing will become
+        available after secure account authorization is implemented.
+      </div>
+
+      <div class="steps">
+        <strong>How pairing will work</strong><br>
+        1. Enter your WhatsApp number.<br>
+        2. Request your secure pairing code.<br>
+        3. Open WhatsApp on your phone.<br>
+        4. Go to Linked devices → Link a device.<br>
+        5. Select Link with phone number instead.
+      </div>
+    </section>
+
+    <footer class="footer">
+      NexaBot · Secure WhatsApp connection
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('pairingForm').addEventListener('submit', event => {
+      event.preventDefault();
+      document.getElementById('notice').style.display = 'block';
+    });
+  </script>
+</body>
+</html>
