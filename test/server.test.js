@@ -1995,6 +1995,7 @@ test('registration creates a pending account successfully', async () => {
     assert.equal(data.success, true);
     assert.deepEqual(data.account, expectedAccount);
     assert.deepEqual(insertedAccount, {
+      auth_user_id: 'test-user-123',
       phone_e164: '233241234567',
       account_status: 'pairing_pending'
     });
