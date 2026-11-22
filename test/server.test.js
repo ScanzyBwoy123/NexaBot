@@ -249,6 +249,7 @@ test('unexpected request errors return a safe 500 response', () => {
   const handler = createRequestHandler();
 
   const req = {
+    headers: {},
     get method() {
       throw new Error('Simulated internal failure');
     }
