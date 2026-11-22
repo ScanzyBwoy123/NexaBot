@@ -449,8 +449,13 @@ function createRequestHandler(options = {}) {
         error: 'Not found'
       }));
     } catch (error) {
-      console.error('NexaBot request error:', error.message);
-
+    console.error('NexaBot request error:', {
+  requestPath,
+  errorType: typeof error,
+  errorValue: String(error),
+  message: error?.message,
+  stack: error?.stack
+});  
       
       if (!res.headersSent) {
         const isBadRequest =
