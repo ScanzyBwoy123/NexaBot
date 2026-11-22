@@ -40,7 +40,8 @@ function createSessionManager(options = {}) {
   client: null,
   startPromise: null,
   status: 'starting',
-  createdAt: new Date().toISOString()
+    createdAt: new Date().toISOString(),
+  stopping: false
 };
 
     sessions.set(accountId, session);
