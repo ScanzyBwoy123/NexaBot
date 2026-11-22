@@ -21,5 +21,17 @@ function createSupabaseClient() {
   }
 });
 }
+async function verifySupabaseConnection(client) {
+  const { error } = await client
+    .schema('nexabot')
+    .from('accounts')
+    .select('id')
+    .limit(1);
 
+  if (error) {
+    throw new Error(`Supabase connectivity check failed: ${error.message}`);
+  }
+
+  return true;
+}
 module.exports = { createSupabaseClient };
