@@ -221,8 +221,7 @@ function createRequestHandler(options = {}) {
 
           return;
         }
-        
-        const normalizedPhoneNumber = String(body.phoneNumber || '').replace(/\D/g, '');
+        const normalizedPhoneNumber = account.phoneNumber;
         const now = Date.now();
         const previousAttempt = pairingAttempts.get(normalizedPhoneNumber);
 
@@ -287,7 +286,7 @@ function createRequestHandler(options = {}) {
         let code;
 
         try {
-          code = await requestPairingCode(client, body.phoneNumber);
+          code = await requestPairingCode(client, account.phoneNumber);
           failedPairingCooldowns.delete(normalizedPhoneNumber);
         } catch (error) {
           failedPairingCooldowns.set(
