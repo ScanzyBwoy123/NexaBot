@@ -125,10 +125,10 @@ function createRequestHandler(options = {}) {
 
     return false;
   }
-  return async (req, res) => {
-    if (applyCors(req, res)) return;
-    try {
-      const requestPath = new URL(req.url, 'http://localhost').pathname.replace(/\/+$/, '') || '/';
+  128  return async (req, res) => {
+129    try {
+130      if (applyCors(req, res)) return;
+131      const requestPath = new URL(req.url, 'http://localhost').pathname.replace(/\/+$/, '') || '/';
 
       if (req.method === 'GET' && requestPath === '/health') {
         res.writeHead(200, {
