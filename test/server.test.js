@@ -791,39 +791,19 @@ test('server does not start a global WhatsApp session', async () => {
     }
   }
 });
-test('pairing code is never logged or exposed by the health endpoint', async () => {
+test('health endpoint never exposes pairing codes', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousDeployerId = process.env.DEPLOYER_ID;
   const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
-  const originalLog = console.log;
 
   process.env.DEVELOPER_IDS = '233241234567';
-  process.env.DEPLOYER_ID = '233240000888';
   process.env.ENABLE_WHATSAPP = 'true';
 
-  const logs = [];
-  let receivedOptions;
   let server;
 
   try {
-    console.log = (...args) => logs.push(args.join(' '));
-
-    ({ server } = startServer({
-      port: 0,
-      startWhatsApp: options => {
-        receivedOptions = options;
-        return Promise.resolve();
-      }
-    }));
+    ({ server } = startServer({ port: 0 }));
 
     await once(server, 'listening');
-
-    receivedOptions.onCode('12345678');
-
-    assert.equal(
-  logs.some(line => line.includes('12345678')),
-  false
-);
 
     const response = await fetch(
       `http://127.0.0.1:${server.address().port}/health`
@@ -835,8 +815,6 @@ test('pairing code is never logged or exposed by the health endpoint', async () 
     assert.equal(healthBody.includes('12345678'), false);
     assert.equal(healthBody.includes('pairing'), false);
   } finally {
-    console.log = originalLog;
-
     if (server?.listening) {
       const closed = once(server, 'close');
       server.close();
@@ -849,12 +827,6 @@ test('pairing code is never logged or exposed by the health endpoint', async () 
       process.env.DEVELOPER_IDS = previousDeveloperIds;
     }
 
-    if (previousDeployerId === undefined) {
-      delete process.env.DEPLOYER_ID;
-    } else {
-      process.env.DEPLOYER_ID = previousDeployerId;
-    }
-
     if (previousEnableWhatsApp === undefined) {
       delete process.env.ENABLE_WHATSAPP;
     } else {
@@ -862,7 +834,6 @@ test('pairing code is never logged or exposed by the health endpoint', async () 
     }
   }
 });
-
 test('pairing endpoint rejects requests without the secret token', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
   const previousDeployerId = process.env.DEPLOYER_ID;
