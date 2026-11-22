@@ -851,3 +851,28 @@ test('ignores late status events from a previous session after restart', async (
     'waiting_for_pairing'
   );
 });
+test('ignores status events after a session shutdown has started', async () => {
+  const mock = createMockStartWhatsApp();
+
+  const manager = createSessionManager({
+    startWhatsApp: mock.startWhatsApp
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const handlers = mock.calls[0].options;
+
+  const stopPromise = manager.stopSession(ACCOUNT_A);
+
+  handlers.onReady();
+
+  assert.equal(
+    manager.getSession(ACCOUNT_A),
+    null
+  );
+
+  await stopPromise;
+});
