@@ -2454,3 +2454,89 @@ test('session start rejects unauthenticated requests', async () => {
   assert.equal(result.error, 'Unauthorized');
   assert.equal(sessionStarted, false);
 });
+test('session start creates a session for the authenticated account', async () => {
+  const { Readable } = require('node:stream');
+
+  const commandEngine = {};
+  let startedOptions;
+
+  const supabase = {
+    auth: {
+      getUser: async token => ({
+        data: {
+          user: token === 'valid-access-token'
+            ? { id: 'authenticated-user-1' }
+            : null
+        },
+        error: null
+      })
+    },
+    schema: () => ({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: {
+                id: 'account-uuid-1',
+                phone_e164: '233241234567',
+                account_status: 'pairing_pending'
+              },
+              error: null
+            })
+          })
+        })
+      })
+    })
+  };
+
+  const sessionManager = {
+    getSession: () => null,
+    startSession: async options => {
+      startedOptions = options;
+      return {
+        accountId: options.accountId,
+        status: 'waiting_for_pairing'
+      };
+    }
+  };
+
+  const handler = createRequestHandler({
+    supabase,
+    sessionManager,
+    commandEngine
+  });
+
+  const req = Readable.from(['{}']);
+  req.method = 'POST';
+  req.url = '/session/start';
+  req.headers = {
+    authorization: 'Bearer valid-access-token'
+  };
+
+  let statusCode;
+  let responseBody;
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  await handler(req, res);
+
+  const result = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 202);
+  assert.equal(result.success, true);
+  assert.equal(result.session.accountId, 'account-uuid-1');
+  assert.equal(result.session.status, 'waiting_for_pairing');
+  assert.equal(startedOptions.accountId, 'account-uuid-1');
+  assert.equal(startedOptions.phoneNumber, '233241234567');
+  assert.equal(startedOptions.commandEngine, commandEngine);
+});
