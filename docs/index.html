@@ -81,7 +81,27 @@
         Enter your WhatsApp number with its country code to begin the
         account connection process.
       </p>
+      <form id="loginForm">
+  <label for="email">Email address</label>
+  <input
+    id="email"
+    type="email"
+    placeholder="Enter your account email"
+    autocomplete="email"
+    required
+  >
 
+  <label for="password">Password</label>
+  <input
+    id="password"
+    type="password"
+    placeholder="Enter your password"
+    autocomplete="current-password"
+    required
+  >
+
+  <button type="submit">Sign in to NexaBot</button>
+</form>
       <form id="pairingForm">
         <label for="phoneNumber">WhatsApp phone number</label>
         <input
