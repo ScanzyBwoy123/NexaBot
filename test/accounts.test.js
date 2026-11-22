@@ -168,12 +168,4 @@ test('hides database errors from callers', async () => {
   );
 });
 
-  const service = createAccountService(supabase);
-
-  await assert.rejects(
-    () => service.registerPendingAccount('233241234567'),
-    {
-      message: 'Account registration failed.'
-    }
-  );
-});
+  
