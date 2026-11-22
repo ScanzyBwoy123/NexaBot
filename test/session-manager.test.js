@@ -959,3 +959,47 @@ test('prevents restarting an account while its previous session is stopping', as
   assert.equal(result.accountId, ACCOUNT_A);
   assert.ok(manager.getSession(ACCOUNT_A));
 });
+test('cleans up the stopping session after startup fails without affecting another account', async () => {
+  let failStartup;
+  const secondClient = createMockClient();
+  let startCount = 0;
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      startCount++;
+
+      if (startCount === 1) {
+        return new Promise((resolve, reject) => {
+          failStartup = () => reject(new Error('Startup failed'));
+        });
+      }
+
+      return secondClient;
+    }
+  });
+
+  const firstStart = manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_B,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const firstStop = manager.stopSession(ACCOUNT_A);
+
+  failStartup();
+
+  await assert.rejects(
+    firstStart,
+    { message: 'Startup failed' }
+  );
+
+  assert.equal(await firstStop, true);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+  assert.ok(manager.getSession(ACCOUNT_B));
+  assert.equal(manager.getClient(ACCOUNT_B), secondClient);
+  assert.equal(secondClient.destroyed, false);
+});
