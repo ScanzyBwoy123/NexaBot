@@ -20,6 +20,33 @@ function safeTokenMatch(provided, expected) {
 }
 const { startWhatsApp, requestPairingCode } = require('./whatsapp');
 const { createSessionManager } = require('./session-manager');
+async function verifyPersistentStorage() {
+  const storageDir = process.env.NEXABOT_AUTH_DIR || '.nexabot-auth';
+  const markerPath = `${storageDir}/.nexabot-volume-check`;
+  const markerContent = 'NexaBot persistent storage verified';
+
+  await fs.promises.mkdir(storageDir, { recursive: true });
+
+  try {
+    const existing = await fs.promises.readFile(markerPath, 'utf8');
+
+    if (existing !== markerContent) {
+      throw new Error('Storage marker content does not match.');
+    }
+
+    return 'verified';
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw error;
+    }
+
+    await fs.promises.writeFile(markerPath, markerContent, {
+      flag: 'wx'
+    });
+
+    return 'created';
+  }
+}
 function validateConfiguration(options = {}) {
   const developerIds = (process.env.DEVELOPER_IDS || '')
     .split(',')
