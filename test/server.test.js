@@ -1609,6 +1609,9 @@ test('pairing endpoint rejects requests when no API token is configured', async 
   }
 });
 test('pairing endpoint rejects unauthenticated requests with malformed JSON', async () => {
+  const previousDeveloperIds = process.env.DEVELOPER_IDS;
+  process.env.DEVELOPER_IDS = '233241234567';
+
   let server;
 
   try {
@@ -1641,6 +1644,12 @@ test('pairing endpoint rejects unauthenticated requests with malformed JSON', as
       const closed = once(server, 'close');
       server.close();
       await closed;
+    }
+
+    if (previousDeveloperIds === undefined) {
+      delete process.env.DEVELOPER_IDS;
+    } else {
+      process.env.DEVELOPER_IDS = previousDeveloperIds;
     }
   }
 });
