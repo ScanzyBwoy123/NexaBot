@@ -17,6 +17,7 @@ function safeTokenMatch(provided, expected) {
     crypto.timingSafeEqual(providedBuffer, expectedBuffer);
 }
 const { startWhatsApp, requestPairingCode } = require('./whatsapp');
+const { createSessionManager } = require('./session-manager');
 function validateConfiguration(options = {}) {
   const developerIds = (process.env.DEVELOPER_IDS || '')
     .split(',')
