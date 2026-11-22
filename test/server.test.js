@@ -1282,10 +1282,14 @@ test('pairing endpoint blocks the fourth request within ten minutes', async () =
       }
     );
 
-    for (let i = 0; i < 3; i += 1) {
-      const response = await makeRequest();
-      assert.equal(response.status, 200);
-    }
+ for (let i = 0; i < 3; i += 1) {
+  const response = await makeRequest();
+  const result = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.equal(result.success, true);
+  assert.equal(result.code, '87654321');
+}
 
     const fourthResponse = await makeRequest();
     const result = await fourthResponse.json();
