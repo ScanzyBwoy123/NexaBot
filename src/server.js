@@ -515,7 +515,7 @@ const server = http.createServer(createRequestHandler({
   verifyPersistentStorage()
 .then(async storageStatus => {
     console.log(`NexaBot persistent storage marker: ${storageStatus}`);
-    if (supabase) {
+    if (supabase && require.main === module) {
       await verifySupabaseConnection(supabase);
       console.log('NexaBot Supabase connectivity check passed.');
     } else if (require.main === module) {
