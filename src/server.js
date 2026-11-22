@@ -1,6 +1,7 @@
 'use strict';
 
 const http = require('node:http');
+const fs = require('node:fs');
 const crypto = require('node:crypto');
 const { createNexaBot } = require('./index');
 const { createSupabaseClient } = require('./supabase');
