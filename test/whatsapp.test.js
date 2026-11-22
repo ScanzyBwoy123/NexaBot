@@ -1991,3 +1991,68 @@ test('startWhatsApp destroys the client when initialization fails', async () => 
 
   assert.equal(destroyCount, 1);
 });
+test('startWhatsApp preserves the initialization error when client cleanup fails', async () => {
+  const { EventEmitter } = require('node:events');
+  const Module = require('node:module');
+
+  class MockClient extends EventEmitter {
+    async initialize() {
+      throw new Error('Initialization failed');
+    }
+
+    async destroy() {
+      throw new Error('Cleanup failed');
+    }
+  }
+
+  class MockLocalAuth {}
+
+  const originalLoad = Module._load;
+  const modulePath = require.resolve('../src/whatsapp');
+
+  delete require.cache[modulePath];
+
+  Module._load = function (request, parent, isMain) {
+    if (request === 'whatsapp-web.js') {
+      return {
+        Client: MockClient,
+        LocalAuth: MockLocalAuth
+      };
+    }
+
+    return originalLoad.call(this, request, parent, isMain);
+  };
+
+  let startWhatsApp;
+
+  try {
+    ({ startWhatsApp } = require('../src/whatsapp'));
+  } finally {
+    Module._load = originalLoad;
+    delete require.cache[modulePath];
+  }
+
+  let cleanupError;
+  let reportedError;
+
+  await assert.rejects(
+    startWhatsApp({
+      commandEngine: {
+        handle: async () => {},
+        authorizer: {
+          authorize: () => ({ allowed: true })
+        }
+      },
+      onCleanupError: error => {
+        cleanupError = error;
+      },
+      onError: error => {
+        reportedError = error;
+      }
+    }),
+    { message: 'Initialization failed' }
+  );
+
+  assert.equal(cleanupError?.message, 'Cleanup failed');
+  assert.equal(reportedError?.message, 'Initialization failed');
+});
