@@ -102,6 +102,29 @@ function createRequestHandler(options = {}) {
   const failedPairingCooldownMs = 60 * 1000;
   const pairingWindowMs = 10 * 60 * 1000;
   const maxPairingAttempts = 3;
+    const allowedOrigin = 'https://scanzybwoy123.github.io';
+
+  function applyCors(req, res) {
+    const origin = req.headers.origin;
+
+    if (origin === allowedOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader(
+        'Access-Control-Allow-Headers',
+        'Authorization, Content-Type'
+      );
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    }
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(origin === allowedOrigin ? 204 : 403);
+      res.end();
+      return true;
+    }
+
+    return false;
+  }
   return async (req, res) => {
     try {
       const requestPath = new URL(req.url, 'http://localhost').pathname.replace(/\/+$/, '') || '/';
