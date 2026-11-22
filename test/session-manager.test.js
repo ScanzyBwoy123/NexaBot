@@ -365,3 +365,45 @@ test('cleans up when WhatsApp startup fails during a stop request', async () => 
   assert.equal(await stopPromise, true);
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('stopping one account does not affect another account still starting', async () => {
+  let finishSecondStartup;
+  const firstClient = createMockClient();
+  const secondClient = createMockClient();
+  let startupCount = 0;
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      startupCount++;
+
+      if (startupCount === 1) {
+        return firstClient;
+      }
+
+      return new Promise((resolve) => {
+        finishSecondStartup = () => resolve(secondClient);
+      });
+    }
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const secondStart = manager.startSession({
+    accountId: ACCOUNT_B,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await manager.stopSession(ACCOUNT_A);
+
+  assert.equal(firstClient.destroyed, true);
+  assert.equal(secondClient.destroyed, false);
+
+  finishSecondStartup();
+  await secondStart;
+
+  assert.ok(manager.getSession(ACCOUNT_B));
+  assert.equal(manager.getClient(ACCOUNT_B), secondClient);
+  assert.equal(secondClient.destroyed, false);
+});
