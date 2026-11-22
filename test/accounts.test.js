@@ -118,24 +118,23 @@ test('prevents duplicate account registration', async () => {
     select() {
       return this;
     },
-      const result = await service.registerPendingAccount(
-    '233241234567',
-    '11111111-1111-4111-8111-111111111111'
-  );
+    single: async () => ({
       data: null,
       error: { code: '23505' }
     })
   };
 
   const service = createAccountService(supabase);
-  const result = await service.registerPendingAccount('233241234567');
+  const result = await service.registerPendingAccount(
+    '233241234567',
+    '11111111-1111-4111-8111-111111111111'
+  );
 
   assert.deepEqual(result, {
     success: false,
     error: 'ACCOUNT_ALREADY_EXISTS'
   });
 });
-
 test('hides database errors from callers', async () => {
   const supabase = {
     schema() {
