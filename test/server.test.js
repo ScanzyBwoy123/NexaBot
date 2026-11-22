@@ -1716,79 +1716,79 @@ test('pairing endpoint rejects oversized JSON without crashing the server', asyn
   }
 });
 test('pairing code is never exposed in request error logs', async () => {
-  const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
-  const previousPairingToken = process.env.PAIRING_API_TOKEN;
-  const originalConsoleError = console.error;
-
-  process.env.DEVELOPER_IDS = '233241234567';
-  process.env.ENABLE_WHATSAPP = 'true';
-  process.env.PAIRING_API_TOKEN = 'test-secret-token';
-
+  const { Readable } = require('node:stream');
   const secretCode = '87654321';
   const logs = [];
-  let server;
+  const originalConsoleError = console.error;
 
-  try {
-    console.error = (...args) => logs.push(args.join(' '));
-
-    ({ server } = startServer({
-      port: 0,
-      startWhatsApp: async () => ({
+  const handler = createRequestHandler({
+    supabase: {
+      auth: {
+        getUser: async () => ({
+          data: { user: { id: 'authenticated-user-1' } },
+          error: null
+        })
+      },
+      schema: () => ({
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: {
+                  id: 'account-uuid-privacy',
+                  phone_e164: '233241234567',
+                  account_status: 'pairing_pending'
+                },
+                error: null
+              })
+            })
+          })
+        })
+      })
+    },
+    sessionManager: {
+      getClient: () => ({
         async requestPairingCode() {
           throw new Error(`Pairing failed with code ${secretCode}`);
         }
       })
-    }));
+    }
+  });
 
-    await once(server, 'listening');
-    await new Promise(resolve => setImmediate(resolve));
+  const req = Readable.from(['{}']);
+  req.method = 'POST';
+  req.url = '/pairing/request';
+  req.headers = {
+    authorization: 'Bearer valid-access-token'
+  };
 
-    const response = await fetch(
-      `http://127.0.0.1:${server.address().port}/pairing/request`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-secret-token'
-        },
-        body: JSON.stringify({
-          phoneNumber: '233241234567'
-        })
-      }
-    );
+  let statusCode;
+  let responseBody;
 
-    const result = await response.json();
+  const res = {
+    headersSent: false,
+    writeHead(status) {
+      statusCode = status;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
 
-    assert.equal(response.status, 500);
+  try {
+    console.error = (...args) => logs.push(args.join(' '));
+
+    await handler(req, res);
+
+    const result = JSON.parse(responseBody);
+
+    assert.equal(statusCode, 500);
     assert.equal(result.error, 'Internal server error');
+    assert.equal(responseBody.includes(secretCode), false);
     assert.equal(logs.some(line => line.includes(secretCode)), false);
   } finally {
     console.error = originalConsoleError;
-
-    if (server?.listening) {
-      const closed = once(server, 'close');
-      server.close();
-      await closed;
-    }
-
-    if (previousDeveloperIds === undefined) {
-      delete process.env.DEVELOPER_IDS;
-    } else {
-      process.env.DEVELOPER_IDS = previousDeveloperIds;
-    }
-
-    if (previousEnableWhatsApp === undefined) {
-      delete process.env.ENABLE_WHATSAPP;
-    } else {
-      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
-    }
-
-    if (previousPairingToken === undefined) {
-      delete process.env.PAIRING_API_TOKEN;
-    } else {
-      process.env.PAIRING_API_TOKEN = previousPairingToken;
-    }
   }
 });
 test('public registration is disabled by default', async () => {
