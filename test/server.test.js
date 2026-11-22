@@ -1821,3 +1821,49 @@ test('pairing code is never exposed in request error logs', async () => {
     }
   }
 });
+test('public registration is disabled by default', async () => {
+  const previousSetting = process.env.ENABLE_PUBLIC_REGISTRATION;
+  delete process.env.ENABLE_PUBLIC_REGISTRATION;
+
+  const handler = createRequestHandler();
+  let statusCode;
+  let responseBody;
+
+  const req = {
+    method: 'POST',
+    url: '/accounts/register',
+    headers: {}
+  };
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  try {
+    await handler(req, res);
+
+    const data = JSON.parse(responseBody);
+
+    assert.equal(statusCode, 503);
+    assert.equal(data.success, false);
+    assert.equal(
+      data.error,
+      'Registration is temporarily unavailable.'
+    );
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+  } finally {
+    if (previousSetting === undefined) {
+      delete process.env.ENABLE_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ENABLE_PUBLIC_REGISTRATION = previousSetting;
+    }
+  }
+});
