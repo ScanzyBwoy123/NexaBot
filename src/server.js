@@ -141,8 +141,9 @@ function createRequestHandler(options = {}) {
         const body = await readJsonBody(req);
         const accountService = createAccountService(options.supabase);
 
-        const result = await accountService.registerPendingAccount(
-          body.phoneNumber
+           const result = await accountService.registerPendingAccount(
+          body.phoneNumber,
+          user.id
         );
 
         if (!result.success) {
