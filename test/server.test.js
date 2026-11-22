@@ -1161,7 +1161,7 @@ test('pairing endpoint returns 503 when the account has no active WhatsApp sessi
 
   assert.equal(statusCode, 503);
   assert.equal(result.success, false);
-  assert.equal(result.error, 'WhatsApp is not ready.');
+  assert.equal(result.error, 'Your WhatsApp session is not ready.');
 });
 test('pairing endpoint rejects invalid phone numbers without requesting a code', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
