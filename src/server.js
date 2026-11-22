@@ -64,9 +64,11 @@ function readJsonBody(req) {
 }
 
 function createRequestHandler(options = {}) {
-    const supabaseAuth = options.supabase
-    ? createSupabaseAuth(options.supabase)
-    : null;
+      const supabaseAuth =
+    options.supabase?.auth &&
+    typeof options.supabase.auth.getUser === 'function'
+      ? createSupabaseAuth(options.supabase)
+      : null;
   const pairingAttempts = new Map();
   const failedPairingCooldowns = new Map();
   const failedPairingCooldownMs = 60 * 1000;
