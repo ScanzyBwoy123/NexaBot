@@ -449,7 +449,7 @@ function createRequestHandler(options = {}) {
         error: 'Not found'
       }));
     } catch (error) {
-      console.error('NexaBot request error: Pairing request failed.');
+      console.error('NexaBot request error:', error.message);
 
       
       if (!res.headersSent) {
