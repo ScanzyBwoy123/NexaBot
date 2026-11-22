@@ -1034,3 +1034,33 @@ test('ignores every status callback after shutdown begins', async () => {
 
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('preserves another connected account when one account stops', async () => {
+  const firstClient = createMockClient();
+  const secondClient = createMockClient();
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      return startCount++ === 0 ? firstClient : secondClient;
+    }
+  });
+
+  let startCount = 0;
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_B,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await manager.stopSession(ACCOUNT_A);
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+  assert.ok(manager.getSession(ACCOUNT_B));
+  assert.equal(manager.getClient(ACCOUNT_B), secondClient);
+  assert.equal(firstClient.destroyed, true);
+  assert.equal(secondClient.destroyed, false);
+});
