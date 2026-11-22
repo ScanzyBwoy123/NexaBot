@@ -75,7 +75,7 @@ function createSessionManager(options = {}) {
             session.status = 'connected';
           }
         },
-
+       });
         onAuthFailure: () => {
           if (!session.stopping) {
             session.status = 'auth_failed';
