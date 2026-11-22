@@ -670,3 +670,49 @@ test('keeps session status changes isolated between accounts', async () => {
     'waiting_for_pairing'
   );
 });
+test('stopping an account with failed startup leaves another account untouched', async () => {
+  let failFirstStartup;
+  const secondClient = createMockClient();
+  let startupCount = 0;
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      startupCount++;
+
+      if (startupCount === 1) {
+        return new Promise((resolve, reject) => {
+          failFirstStartup = () => {
+            reject(new Error('Initialization failed'));
+          };
+        });
+      }
+
+      return secondClient;
+    }
+  });
+
+  const firstStart = manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_B,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const firstStop = manager.stopSession(ACCOUNT_A);
+
+  failFirstStartup();
+
+  await assert.rejects(
+    firstStart,
+    { message: 'Initialization failed' }
+  );
+
+  assert.equal(await firstStop, true);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+  assert.ok(manager.getSession(ACCOUNT_B));
+  assert.equal(manager.getClient(ACCOUNT_B), secondClient);
+  assert.equal(secondClient.destroyed, false);
+});
