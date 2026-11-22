@@ -450,7 +450,7 @@ function createRequestHandler(options = {}) {
       }));
     } catch (error) {
     console.error('NexaBot request error:', {
-  requestPath,
+  requestUrl: req.url,
   errorType: typeof error,
   errorValue: String(error),
   message: error?.message,
