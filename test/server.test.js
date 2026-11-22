@@ -1100,76 +1100,69 @@ test('pairing endpoint accepts an authenticated account', async () => {
   assert.equal(result.success, true);
   assert.equal(result.code, '87654321');
 });
-test('pairing endpoint returns 503 when WhatsApp is not ready', async () => {
-  const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousDeployerId = process.env.DEPLOYER_ID;
-  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
-  const previousPairingToken = process.env.PAIRING_API_TOKEN;
+test('pairing endpoint returns 503 when the account has no active WhatsApp session', async () => {
+  const { Readable } = require('node:stream');
 
-  process.env.DEVELOPER_IDS = '233241234567';
-  process.env.DEPLOYER_ID = '233240000888';
-  process.env.ENABLE_WHATSAPP = 'false';
-  process.env.PAIRING_API_TOKEN = 'correct-secret-token';
-
-  let server;
-
-  try {
-    ({ server } = startServer({ port: 0 }));
-
-    await once(server, 'listening');
-
-    const response = await fetch(
-      `http://127.0.0.1:${server.address().port}/pairing/request`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer correct-secret-token'
-        },
-        body: JSON.stringify({
-          phoneNumber: '233241234567'
+  const handler = createRequestHandler({
+    supabase: {
+      auth: {
+        getUser: async () => ({
+          data: { user: { id: 'authenticated-user-1' } },
+          error: null
         })
-      }
-    );
-
-    const result = await response.json();
-
-    assert.equal(response.status, 503);
-    assert.equal(result.success, false);
-    assert.equal(result.error, 'WhatsApp is not ready.');
-  } finally {
-    if (server?.listening) {
-      const closed = once(server, 'close');
-      server.close();
-      await closed;
+      },
+      schema: () => ({
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({
+                data: {
+                  id: 'account-uuid-1',
+                  phone_e164: '233241234567',
+                  account_status: 'pairing_pending'
+                },
+                error: null
+              })
+            })
+          })
+        })
+      })
+    },
+    sessionManager: {
+      getClient: () => null
     }
+  });
 
-    if (previousDeveloperIds === undefined) {
-      delete process.env.DEVELOPER_IDS;
-    } else {
-      process.env.DEVELOPER_IDS = previousDeveloperIds;
-    }
+  const req = Readable.from(['{}']);
+  req.method = 'POST';
+  req.url = '/pairing/request';
+  req.headers = {
+    authorization: 'Bearer valid-access-token'
+  };
 
-    if (previousDeployerId === undefined) {
-      delete process.env.DEPLOYER_ID;
-    } else {
-      process.env.DEPLOYER_ID = previousDeployerId;
-    }
+  let statusCode;
+  let responseBody;
 
-    if (previousEnableWhatsApp === undefined) {
-      delete process.env.ENABLE_WHATSAPP;
-    } else {
-      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
     }
+  };
 
-    if (previousPairingToken === undefined) {
-      delete process.env.PAIRING_API_TOKEN;
-    } else {
-      process.env.PAIRING_API_TOKEN = previousPairingToken;
-    }
-  }
+  await handler(req, res);
+
+  const result = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 503);
+  assert.equal(result.success, false);
+  assert.equal(result.error, 'WhatsApp is not ready.');
 });
-
 test('pairing endpoint rejects invalid phone numbers without requesting a code', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
   const previousDeployerId = process.env.DEPLOYER_ID;
