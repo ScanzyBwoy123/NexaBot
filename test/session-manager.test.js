@@ -242,7 +242,11 @@ test('updates session status when connection events occur', async () => {
 
   handlers.onQR('test-qr');
   assert.equal(manager.getSession(ACCOUNT_A).status, 'waiting_for_pairing');
+  handlers.onCode('12345678');
+assert.equal(manager.getSession(ACCOUNT_A).status, 'waiting_for_pairing');
 
+handlers.onAuthFailure();
+assert.equal(manager.getSession(ACCOUNT_A).status, 'auth_failed');
   handlers.onAuthenticated();
   assert.equal(manager.getSession(ACCOUNT_A).status, 'authenticated');
 
