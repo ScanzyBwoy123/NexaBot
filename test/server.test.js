@@ -2011,6 +2011,12 @@ test('registration rejects duplicate phone numbers', async () => {
   const previousSetting = process.env.ENABLE_PUBLIC_REGISTRATION;
   process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
   const supabase = {
+      auth: {
+      getUser: async () => ({
+        data: { user: { id: 'test-user-123' } },
+        error: null
+      })
+    },
     schema() {
       return this;
     },
