@@ -716,3 +716,19 @@ test('stopping an account with failed startup leaves another account untouched',
   assert.equal(manager.getClient(ACCOUNT_B), secondClient);
   assert.equal(secondClient.destroyed, false);
 });
+test('removes a session when the client has no destroy method', async () => {
+  const client = {};
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => client
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  assert.equal(await manager.stopSession(ACCOUNT_A), true);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+  assert.equal(manager.getClient(ACCOUNT_A), null);
+});
