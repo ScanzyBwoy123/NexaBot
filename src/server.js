@@ -274,20 +274,21 @@ function createRequestHandler(options = {}) {
 
       
       if (!res.headersSent) {
-        const isInvalidPhoneNumber =
-          error.message === 'Invalid international phone number.';
+        const isBadRequest =
+  error.message === 'Invalid international phone number.' ||
+  error.message === 'Invalid JSON body.';
 
-        res.writeHead(isInvalidPhoneNumber ? 400 : 500, {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-store'
-        });
+res.writeHead(isBadRequest ? 400 : 500, {
+  'Content-Type': 'application/json',
+  'Cache-Control': 'no-store'
+});
 
-        res.end(JSON.stringify({
-          success: false,
-          error: isInvalidPhoneNumber
-            ? error.message
-            : 'Internal server error'
-        }));
+res.end(JSON.stringify({
+  success: false,
+  error: isBadRequest
+    ? error.message
+    : 'Internal server error'
+}));
 
       } else {
         res.destroy();
