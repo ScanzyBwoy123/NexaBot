@@ -73,7 +73,35 @@ function createAccountService(supabase) {
       }
     };
   }
+    async function getAccountForUser(authUserId) {
+    if (
+      typeof authUserId !== 'string' ||
+      authUserId.trim() === ''
+    ) {
+      throw new Error('Authenticated user is required.');
+    }
 
+    const { data, error } = await supabase
+      .schema('nexabot')
+      .from('accounts')
+      .select('id, phone_e164, account_status')
+      .eq('auth_user_id', authUserId)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error('Account lookup failed.');
+    }
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      id: data.id,
+      phoneNumber: data.phone_e164,
+      status: data.account_status
+    };
+  }
   return { registerPendingAccount };
 }
 
