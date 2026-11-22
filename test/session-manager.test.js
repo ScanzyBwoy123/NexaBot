@@ -560,3 +560,39 @@ test('allows a new session after a previous shutdown failure', async () => {
   assert.equal(result.accountId, ACCOUNT_A);
   assert.ok(manager.getSession(ACCOUNT_A));
 });
+test('allows an account to retry startup after initialization failure', async () => {
+  let startCount = 0;
+  const successfulClient = createMockClient();
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      startCount++;
+
+      if (startCount === 1) {
+        throw new Error('Initialization failed');
+      }
+
+      return successfulClient;
+    }
+  });
+
+  await assert.rejects(
+    manager.startSession({
+      accountId: ACCOUNT_A,
+      commandEngine: { handle: async () => {} }
+    }),
+    { message: 'Initialization failed' }
+  );
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+
+  const result = await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  assert.equal(startCount, 2);
+  assert.equal(result.accountId, ACCOUNT_A);
+  assert.ok(manager.getSession(ACCOUNT_A));
+  assert.equal(manager.getClient(ACCOUNT_A), successfulClient);
+});
