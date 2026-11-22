@@ -2076,7 +2076,8 @@ test('registration rejects duplicate phone numbers', async () => {
     assert.equal(data.success, false);
     assert.equal(data.error, 'ACCOUNT_ALREADY_EXISTS');
     assert.equal(res.headers['Cache-Control'], 'no-store');
-    assert.deepEqual(supabase.insertedRecord, {
+       assert.deepEqual(supabase.insertedRecord, {
+      auth_user_id: 'test-user-123',
       phone_e164: '233241234567',
       account_status: 'pairing_pending'
     });
