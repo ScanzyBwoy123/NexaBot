@@ -785,3 +785,35 @@ test('allows an account to retry after synchronous startup failure', async () =>
   assert.equal(result.accountId, ACCOUNT_A);
   assert.equal(manager.getClient(ACCOUNT_A), successfulClient);
 });
+test('keeps another account active when startup throws synchronously', async () => {
+  const secondClient = createMockClient();
+
+  const manager = createSessionManager({
+    startWhatsApp: ({ clientId }) => {
+      if (clientId === `nexabot-${ACCOUNT_A}`) {
+        throw new Error('Synchronous startup failure');
+      }
+
+      return secondClient;
+    }
+  });
+
+  await assert.rejects(
+    manager.startSession({
+      accountId: ACCOUNT_A,
+      commandEngine: { handle: async () => {} }
+    }),
+    { message: 'Synchronous startup failure' }
+  );
+
+  const result = await manager.startSession({
+    accountId: ACCOUNT_B,
+    commandEngine: { handle: async () => {} }
+  });
+
+  assert.equal(result.accountId, ACCOUNT_B);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+  assert.ok(manager.getSession(ACCOUNT_B));
+  assert.equal(manager.getClient(ACCOUNT_B), secondClient);
+  assert.equal(secondClient.destroyed, false);
+});
