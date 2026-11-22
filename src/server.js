@@ -126,7 +126,6 @@ function createRequestHandler(options = {}) {
     return false;
   }
   return async (req, res) => {
-    if (applyCors(req, res)) return;
     try {
       const requestPath = new URL(req.url, 'http://localhost').pathname.replace(/\/+$/, '') || '/';
 
