@@ -32,13 +32,20 @@ function createAccountService(supabase) {
     throw new Error('Supabase client is required.');
   }
 
-  async function registerPendingAccount(phoneInput) {
-    const phoneNumber = normalizePhoneNumber(phoneInput);
+    async function registerPendingAccount(phoneInput, authUserId) {
+    if (
+      typeof authUserId !== 'string' ||
+      authUserId.trim() === ''
+    ) {
+      throw new Error('Authenticated user is required.');
+    }
 
+    const phoneNumber = normalizePhoneNumber(phoneInput);
     const { data, error } = await supabase
       .schema('nexabot')
       .from('accounts')
       .insert({
+        auth_user_id: authUserId,
         phone_e164: phoneNumber,
         account_status: 'pairing_pending'
       })
