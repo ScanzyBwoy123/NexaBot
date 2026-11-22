@@ -2302,3 +2302,68 @@ test('pairing endpoint rejects requests without Supabase authentication', async 
   assert.equal(result.success, false);
   assert.equal(result.error, 'Unauthorized');
 });
+test('pairing endpoint verifies supplied Supabase access tokens', async () => {
+  const previousToken = process.env.PAIRING_API_TOKEN;
+  delete process.env.PAIRING_API_TOKEN;
+
+  let authCalls = 0;
+
+  const handler = createRequestHandler({
+    supabase: {
+      auth: {
+        getUser: async (token) => {
+          authCalls++;
+          assert.equal(token, 'invalid-access-token');
+
+          return {
+            data: { user: null },
+            error: { message: 'Invalid token' }
+          };
+        }
+      }
+    }
+  });
+
+  const { Readable } = require('node:stream');
+  const req = Readable.from([
+    JSON.stringify({ phoneNumber: '233241234567' })
+  ]);
+
+  req.method = 'POST';
+  req.url = '/pairing/request';
+  req.headers = {
+    authorization: 'Bearer invalid-access-token'
+  };
+
+  let statusCode;
+  let responseBody;
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  try {
+    await handler(req, res);
+
+    const result = JSON.parse(responseBody);
+
+    assert.equal(authCalls, 1);
+    assert.equal(statusCode, 401);
+    assert.equal(result.success, false);
+    assert.equal(result.error, 'Unauthorized');
+  } finally {
+    if (previousToken === undefined) {
+      delete process.env.PAIRING_API_TOKEN;
+    } else {
+      process.env.PAIRING_API_TOKEN = previousToken;
+    }
+  }
+});
