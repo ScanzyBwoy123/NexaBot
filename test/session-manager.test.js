@@ -596,3 +596,47 @@ test('allows an account to retry startup after initialization failure', async ()
   assert.ok(manager.getSession(ACCOUNT_A));
   assert.equal(manager.getClient(ACCOUNT_A), successfulClient);
 });
+test('keeps another account active when one account startup fails', async () => {
+  let failFirstStartup;
+  const secondClient = createMockClient();
+  let startupCount = 0;
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      startupCount++;
+
+      if (startupCount === 1) {
+        return new Promise((resolve, reject) => {
+          failFirstStartup = () => {
+            reject(new Error('Initialization failed'));
+          };
+        });
+      }
+
+      return secondClient;
+    }
+  });
+
+  const firstStart = manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const secondResult = await manager.startSession({
+    accountId: ACCOUNT_B,
+    commandEngine: { handle: async () => {} }
+  });
+
+  failFirstStartup();
+
+  await assert.rejects(
+    firstStart,
+    { message: 'Initialization failed' }
+  );
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+  assert.equal(secondResult.accountId, ACCOUNT_B);
+  assert.ok(manager.getSession(ACCOUNT_B));
+  assert.equal(manager.getClient(ACCOUNT_B), secondClient);
+  assert.equal(secondClient.destroyed, false);
+});
