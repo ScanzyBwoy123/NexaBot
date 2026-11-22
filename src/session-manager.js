@@ -36,11 +36,12 @@ function createSessionManager(options = {}) {
     }
 
     const session = {
-      accountId,
-      client: null,
-      status: 'starting',
-      createdAt: new Date().toISOString()
-    };
+  accountId,
+  client: null,
+  startPromise: null,
+  status: 'starting',
+  createdAt: new Date().toISOString()
+};
 
     sessions.set(accountId, session);
 
