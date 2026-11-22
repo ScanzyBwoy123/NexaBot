@@ -520,3 +520,43 @@ test('shares shutdown failures across simultaneous stop requests', async () => {
   assert.equal(results[1].reason.message, 'Shutdown failed');
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('allows a new session after a previous shutdown failure', async () => {
+  let startCount = 0;
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      startCount++;
+
+      if (startCount === 1) {
+        return {
+          async destroy() {
+            throw new Error('Shutdown failed');
+          }
+        };
+      }
+
+      return createMockClient();
+    }
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await assert.rejects(
+    manager.stopSession(ACCOUNT_A),
+    { message: 'Shutdown failed' }
+  );
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+
+  const result = await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  assert.equal(startCount, 2);
+  assert.equal(result.accountId, ACCOUNT_A);
+  assert.ok(manager.getSession(ACCOUNT_A));
+});
