@@ -184,8 +184,29 @@ function createRequestHandler(options = {}) {
           return;
         }
 
-        const body = await readJsonBody(req);
-        const client = options.getWhatsAppClient?.();
+                const accountService = options.supabase
+          ? createAccountService(options.supabase)
+          : null;
+
+        const account = accountService
+          ? await accountService.getAccountForUser(user.id)
+          : null;
+
+        if (!account) {
+          res.writeHead(404, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          });
+
+          res.end(JSON.stringify({
+            success: false,
+            error: 'NexaBot account not found.'
+          }));
+
+          return;
+        }
+
+        const client = options.sessionManager?.getClient(account.id);
 
         if (!client) {
           res.writeHead(503, {
@@ -195,12 +216,11 @@ function createRequestHandler(options = {}) {
 
           res.end(JSON.stringify({
             success: false,
-            error: 'WhatsApp is not ready.'
+            error: 'Your WhatsApp session is not ready.'
           }));
 
           return;
         }
-
         
         const normalizedPhoneNumber = String(body.phoneNumber || '').replace(/\D/g, '');
         const now = Date.now();
