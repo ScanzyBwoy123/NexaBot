@@ -434,3 +434,27 @@ test('removes a session when WhatsApp client shutdown fails', async () => {
 
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('does not destroy a client twice when stopping the same session', async () => {
+  let destroyCount = 0;
+
+  const client = {
+    async destroy() {
+      destroyCount++;
+    }
+  };
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => client
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  assert.equal(await manager.stopSession(ACCOUNT_A), true);
+  assert.equal(await manager.stopSession(ACCOUNT_A), false);
+
+  assert.equal(destroyCount, 1);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
