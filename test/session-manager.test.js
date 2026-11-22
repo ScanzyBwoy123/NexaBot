@@ -910,3 +910,52 @@ test('ignores late connection events while startup is stopping', async () => {
   assert.equal(client.destroyed, true);
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('prevents restarting an account while its previous session is stopping', async () => {
+  let finishDestroy;
+  let startCount = 0;
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      startCount++;
+
+      if (startCount === 1) {
+        return {
+          destroy: () => new Promise((resolve) => {
+            finishDestroy = resolve;
+          })
+        };
+      }
+
+      return createMockClient();
+    }
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const stopPromise = manager.stopSession(ACCOUNT_A);
+
+  await new Promise((resolve) => setImmediate(resolve));
+
+  await assert.rejects(
+    manager.startSession({
+      accountId: ACCOUNT_A,
+      commandEngine: { handle: async () => {} }
+    }),
+    { message: 'Session already exists.' }
+  );
+
+  finishDestroy();
+  await stopPromise;
+
+  const result = await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  assert.equal(startCount, 2);
+  assert.equal(result.accountId, ACCOUNT_A);
+  assert.ok(manager.getSession(ACCOUNT_A));
+});
