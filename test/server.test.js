@@ -1867,3 +1867,42 @@ test('public registration is disabled by default', async () => {
     }
   }
 });
+test('registration returns 503 when Supabase is unavailable', async () => {
+  const previousSetting = process.env.ENABLE_PUBLIC_REGISTRATION;
+  process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
+
+  const handler = createRequestHandler();
+  let statusCode;
+  let responseBody;
+
+  const req = {
+    method: 'POST',
+    url: '/accounts/register',
+    headers: {}
+  };
+
+  const res = {
+    writeHead(status) {
+      statusCode = status;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  try {
+    await handler(req, res);
+
+    const data = JSON.parse(responseBody);
+
+    assert.equal(statusCode, 503);
+    assert.equal(data.success, false);
+    assert.equal(data.error, 'Account service is unavailable.');
+  } finally {
+    if (previousSetting === undefined) {
+      delete process.env.ENABLE_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ENABLE_PUBLIC_REGISTRATION = previousSetting;
+    }
+  }
+});
