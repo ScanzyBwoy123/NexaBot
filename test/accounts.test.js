@@ -93,7 +93,10 @@ test('registers a pending account successfully', async () => {
     '+233 24 123 4567',
     '11111111-1111-4111-8111-111111111111'
   );
-
+    assert.equal(
+    insertedAccount.auth_user_id,
+    '11111111-1111-4111-8111-111111111111'
+  );
   assert.equal(insertedAccount.phone_e164, '233241234567');
   assert.equal(insertedAccount.account_status, 'pairing_pending');
   assert.equal(result.success, true);
