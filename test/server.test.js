@@ -440,8 +440,12 @@ test('server starts successfully with valid configuration', async () => {
 
     assert.equal(server.listening, true);
     assert.ok(server.address().port > 0);
+    assert.ok(result.sessionManager);
+    assert.equal(typeof result.sessionManager.startSession, 'function');
+    assert.equal(typeof result.sessionManager.getSession, 'function');
+    assert.equal(typeof result.sessionManager.stopSession, 'function');
     assert.equal(server.address().address, '::');
-assert.equal(server.address().family, 'IPv6');
+    assert.equal(server.address().family, 'IPv6');
     assert.ok(result.bot.list().length > 0);
   } finally {
     if (server?.listening) {
