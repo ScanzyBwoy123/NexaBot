@@ -139,17 +139,6 @@ async function stopSession(accountId) {
 
   return true;
 }
-  }
-
-  if (session.client && typeof session.client.destroy === 'function') {
-    await session.client.destroy();
-  }
-
-  sessions.delete(accountId);
-
-  return true;
-}
-
   return {
     startSession,
     getSession,
