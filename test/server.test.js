@@ -1928,6 +1928,12 @@ test('registration creates a pending account successfully', async () => {
   let insertedAccount;
 
   const supabase = {
+        auth: {
+      getUser: async () => ({
+        data: { user: { id: 'test-user-123' } },
+        error: null
+      })
+    },
     schema(schemaName) {
       assert.equal(schemaName, 'nexabot');
       return this;
