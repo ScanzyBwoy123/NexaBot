@@ -1653,29 +1653,40 @@ test('pairing endpoint rejects unauthenticated requests with malformed JSON', as
     }
   }
 });
-test('pairing endpoint rejects oversized JSON without crashing the server', async () => {
+test('registration endpoint rejects oversized JSON without crashing the server', async () => {
   const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
-  const previousPairingToken = process.env.PAIRING_API_TOKEN;
+  const previousRegistration = process.env.ENABLE_PUBLIC_REGISTRATION;
 
   process.env.DEVELOPER_IDS = '233241234567';
-  process.env.ENABLE_WHATSAPP = 'false';
-  process.env.PAIRING_API_TOKEN = 'test-secret-token';
+  process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
 
   let server;
 
   try {
-    ({ server } = startServer({ port: 0 }));
+    const supabase = {
+      auth: {
+        getUser: async () => ({
+          data: { user: { id: 'authenticated-user-1' } },
+          error: null
+        })
+      }
+    };
+
+    ({ server } = startServer({
+      port: 0,
+      supabase
+    }));
+
     await once(server, 'listening');
 
     const baseUrl = `http://127.0.0.1:${server.address().port}`;
 
     await assert.rejects(
-      fetch(`${baseUrl}/pairing/request`, {
+      fetch(`${baseUrl}/accounts/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-secret-token'
+          'Authorization': 'Bearer valid-access-token'
         },
         body: JSON.stringify({
           phoneNumber: '233241234567',
@@ -1702,16 +1713,10 @@ test('pairing endpoint rejects oversized JSON without crashing the server', asyn
       process.env.DEVELOPER_IDS = previousDeveloperIds;
     }
 
-    if (previousEnableWhatsApp === undefined) {
-      delete process.env.ENABLE_WHATSAPP;
+    if (previousRegistration === undefined) {
+      delete process.env.ENABLE_PUBLIC_REGISTRATION;
     } else {
-      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
-    }
-
-    if (previousPairingToken === undefined) {
-      delete process.env.PAIRING_API_TOKEN;
-    } else {
-      process.env.PAIRING_API_TOKEN = previousPairingToken;
+      process.env.ENABLE_PUBLIC_REGISTRATION = previousRegistration;
     }
   }
 });
