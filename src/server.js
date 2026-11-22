@@ -5,6 +5,7 @@ const crypto = require('node:crypto');
 const { createNexaBot } = require('./index');
 const { createSupabaseClient } = require('./supabase');
 const { createAccountService } = require('./accounts');
+const { createSupabaseAuth } = require('./supabase-auth');
 function safeTokenMatch(provided, expected) {
   if (typeof provided !== 'string' || typeof expected !== 'string') {
     return false;
