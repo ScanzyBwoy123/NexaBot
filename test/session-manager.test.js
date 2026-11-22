@@ -750,3 +750,38 @@ test('removes a session when WhatsApp startup throws synchronously', async () =>
   assert.equal(manager.getSession(ACCOUNT_A), null);
   assert.equal(manager.getClient(ACCOUNT_A), null);
 });
+test('allows an account to retry after synchronous startup failure', async () => {
+  let startCount = 0;
+  const successfulClient = createMockClient();
+
+  const manager = createSessionManager({
+    startWhatsApp: () => {
+      startCount++;
+
+      if (startCount === 1) {
+        throw new Error('Synchronous startup failure');
+      }
+
+      return successfulClient;
+    }
+  });
+
+  await assert.rejects(
+    manager.startSession({
+      accountId: ACCOUNT_A,
+      commandEngine: { handle: async () => {} }
+    }),
+    { message: 'Synchronous startup failure' }
+  );
+
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+
+  const result = await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  assert.equal(startCount, 2);
+  assert.equal(result.accountId, ACCOUNT_A);
+  assert.equal(manager.getClient(ACCOUNT_A), successfulClient);
+});
