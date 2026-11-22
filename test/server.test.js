@@ -2064,3 +2064,55 @@ test('registration rejects duplicate phone numbers', async () => {
     }
   }
 });
+test('registration rejects invalid phone numbers with 400', async () => {
+  const previousSetting = process.env.ENABLE_PUBLIC_REGISTRATION;
+  process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
+
+  const handler = createRequestHandler({
+    supabase: {}
+  });
+
+  let statusCode;
+  let responseBody;
+
+  const { Readable } = require('node:stream');
+  const req = Readable.from([
+    JSON.stringify({ phoneNumber: 'invalid-number' })
+  ]);
+
+  req.method = 'POST';
+  req.url = '/accounts/register';
+  req.headers = {};
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  try {
+    await handler(req, res);
+
+    const data = JSON.parse(responseBody);
+
+    assert.equal(statusCode, 400);
+    assert.equal(data.success, false);
+    assert.equal(
+      data.error,
+      'Invalid international phone number.'
+    );
+    assert.equal(res.headers['Cache-Control'], 'no-store');
+  } finally {
+    if (previousSetting === undefined) {
+      delete process.env.ENABLE_PUBLIC_REGISTRATION;
+    } else {
+      process.env.ENABLE_PUBLIC_REGISTRATION = previousSetting;
+    }
+  }
+});
