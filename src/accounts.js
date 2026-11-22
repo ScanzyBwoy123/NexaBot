@@ -102,7 +102,10 @@ function createAccountService(supabase) {
       status: data.account_status
     };
   }
-  return { registerPendingAccount };
+    return {
+    registerPendingAccount,
+    getAccountForUser
+  };
 }
 
 module.exports = {
