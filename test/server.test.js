@@ -1653,7 +1653,7 @@ test('pairing endpoint handles malformed JSON without crashing the server', asyn
     const result = await response.json();
 
     assert.equal(response.status, 400);
-assert.equal(result.error, 'Invalid JSON body.');
+    assert.equal(result.error, 'Invalid JSON body.');
     assert.equal(result.error, 'Internal server error');
 
     const healthResponse = await fetch(`${baseUrl}/health`);
