@@ -2267,3 +2267,38 @@ test('registration rejects malformed JSON with 400', async () => {
     }
   }
 });
+
+test('pairing endpoint rejects requests without Supabase authentication', async () => {
+  const { Readable } = require('node:stream');
+  const handler = createRequestHandler();
+
+  const req = Readable.from([
+    JSON.stringify({ phoneNumber: '233241234567' })
+  ]);
+  req.method = 'POST';
+  req.url = '/pairing/request';
+  req.headers = {};
+
+  let statusCode;
+  let responseBody;
+
+  const res = {
+    headersSent: false,
+    writeHead(status, headers) {
+      statusCode = status;
+      this.headers = headers;
+      this.headersSent = true;
+    },
+    end(body) {
+      responseBody = body;
+    }
+  };
+
+  await handler(req, res);
+
+  const result = JSON.parse(responseBody);
+
+  assert.equal(statusCode, 401);
+  assert.equal(result.success, false);
+  assert.equal(result.error, 'Unauthorized');
+});
