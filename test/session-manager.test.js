@@ -306,3 +306,34 @@ test('prevents simultaneous duplicate session startup for the same account', asy
 
   assert.ok(manager.getSession(ACCOUNT_A));
 });
+
+test('waits for WhatsApp startup before stopping a session', async () => {
+  let finishStartup;
+  const client = createMockClient();
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      return new Promise((resolve) => {
+        finishStartup = () => resolve(client);
+      });
+    }
+  });
+
+  const startPromise = manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const stopPromise = manager.stopSession(ACCOUNT_A);
+
+  assert.equal(client.destroyed, false);
+
+  finishStartup();
+
+  await startPromise;
+  const stopped = await stopPromise;
+
+  assert.equal(stopped, true);
+  assert.equal(client.destroyed, true);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
