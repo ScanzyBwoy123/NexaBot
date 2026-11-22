@@ -34,4 +34,7 @@ async function verifySupabaseConnection(client) {
 
   return true;
 }
-module.exports = { createSupabaseClient };
+module.exports = {
+  createSupabaseClient,
+  verifySupabaseConnection
+};
