@@ -1970,7 +1970,9 @@ test('registration creates a pending account successfully', async () => {
   ]);
   req.method = 'POST';
   req.url = '/accounts/register';
-  req.headers = {};
+    req.headers = {
+    authorization: 'Bearer test-access-token'
+  };
 
   const res = {
     headersSent: false,
