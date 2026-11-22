@@ -2050,7 +2050,9 @@ test('registration rejects duplicate phone numbers', async () => {
 
   req.method = 'POST';
   req.url = '/accounts/register';
-  req.headers = {};
+  req.headers = {
+  authorization: 'Bearer test-access-token'
+};
 
   const res = {
     headersSent: false,
