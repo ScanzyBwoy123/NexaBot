@@ -1412,100 +1412,97 @@ test('pairing endpoint blocks retries for 60 seconds after a failed request', as
   assert.ok(Number(secondResponse.headers['Retry-After']) > 0);
 });
 test('pairing endpoint allows a successful retry after cooldown expires', async () => {
-  const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousDeployerId = process.env.DEPLOYER_ID;
-  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
-  const previousPairingToken = process.env.PAIRING_API_TOKEN;
+  const { Readable } = require('node:stream');
   const originalDateNow = Date.now;
-
-  process.env.DEVELOPER_IDS = '233241234567';
-  process.env.DEPLOYER_ID = '233240000888';
-  process.env.ENABLE_WHATSAPP = 'true';
-  process.env.PAIRING_API_TOKEN = 'correct-secret-token';
-
-  let server;
-  let pairingCodeRequests = 0;
   let fakeNow = originalDateNow();
+  let pairingCodeRequests = 0;
 
   try {
     Date.now = () => fakeNow;
 
-    ({ server } = startServer({
-      port: 0,
-      startWhatsApp: async () => ({
-        async requestPairingCode() {
-          pairingCodeRequests += 1;
-
-          if (pairingCodeRequests === 1) {
-            throw new Error('WhatsApp pairing request failed.');
-          }
-
-          return 'ABCD-1234';
-        }
-      })
-    }));
-
-    await once(server, 'listening');
-    await new Promise(resolve => setImmediate(resolve));
-
-    const makeRequest = () => fetch(
-      `http://127.0.0.1:${server.address().port}/pairing/request`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer correct-secret-token'
+    const handler = createRequestHandler({
+      supabase: {
+        auth: {
+          getUser: async () => ({
+            data: { user: { id: 'authenticated-user-1' } },
+            error: null
+          })
         },
-        body: JSON.stringify({
-          phoneNumber: '233241234567'
+        schema: () => ({
+          from: () => ({
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({
+                  data: {
+                    id: 'account-uuid-3',
+                    phone_e164: '233241234569',
+                    account_status: 'pairing_pending'
+                  },
+                  error: null
+                })
+              })
+            })
+          })
+        })
+      },
+      sessionManager: {
+        getClient: () => ({
+          async requestPairingCode() {
+            pairingCodeRequests += 1;
+
+            if (pairingCodeRequests === 1) {
+              throw new Error('WhatsApp pairing request failed.');
+            }
+
+            return 'ABCD-1234';
+          }
         })
       }
-    );
+    });
+
+    const makeRequest = async () => {
+      const req = Readable.from(['{}']);
+      req.method = 'POST';
+      req.url = '/pairing/request';
+      req.headers = {
+        authorization: 'Bearer valid-access-token'
+      };
+
+      let statusCode;
+      let responseBody;
+
+      const res = {
+        headersSent: false,
+        writeHead(status) {
+          statusCode = status;
+          this.headersSent = true;
+        },
+        end(body) {
+          responseBody = body;
+        }
+      };
+
+      await handler(req, res);
+
+      return {
+        statusCode,
+        result: JSON.parse(responseBody)
+      };
+    };
 
     const firstResponse = await makeRequest();
-    assert.equal(firstResponse.status, 500);
+    assert.equal(firstResponse.statusCode, 500);
 
     fakeNow += 60 * 1000 + 1000;
 
     const secondResponse = await makeRequest();
-    const result = await secondResponse.json();
 
-    assert.equal(secondResponse.status, 200);
-    assert.equal(result.success, true);
-    assert.equal(result.code, 'ABCD-1234');
+    assert.equal(secondResponse.statusCode, 200);
+    assert.equal(secondResponse.result.success, true);
+    assert.equal(secondResponse.result.code, 'ABCD-1234');
     assert.equal(pairingCodeRequests, 2);
   } finally {
     Date.now = originalDateNow;
-
-    if (server?.listening) {
-      const closed = once(server, 'close');
-      server.close();
-      await closed;
-    }
-
-    if (previousDeveloperIds === undefined) {
-      delete process.env.DEVELOPER_IDS;
-    } else {
-      process.env.DEVELOPER_IDS = previousDeveloperIds;
-    }
-
-    if (previousDeployerId === undefined) {
-      delete process.env.DEPLOYER_ID;
-    } else {
-      process.env.DEPLOYER_ID = previousDeployerId;
-    }
-
-    if (previousEnableWhatsApp === undefined) {
-      delete process.env.ENABLE_WHATSAPP;
-    } else {
-      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
-    }
-
-    if (previousPairingToken === undefined) {
-      delete process.env.PAIRING_API_TOKEN;
-    } else {
-      process.env.PAIRING_API_TOKEN = previousPairingToken;
-    }
   }
 });
 test('pairing endpoint rejects GET requests', async () => {
