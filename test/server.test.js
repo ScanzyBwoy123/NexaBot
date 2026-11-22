@@ -2173,7 +2173,9 @@ test('registration rejects a missing phone number with 400', async () => {
 
   req.method = 'POST';
   req.url = '/accounts/register';
-  req.headers = {};
+  req.headers = {
+  authorization: 'Bearer test-access-token'
+};
 
   const res = {
     headersSent: false,
