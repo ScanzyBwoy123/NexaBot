@@ -92,6 +92,79 @@ function createRequestHandler(options = {}) {
 
         return;
       }
+      if (req.method === 'POST' && requestPath === '/session/start') {
+  const sendJson = (status, data) => {
+    res.writeHead(status, {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store'
+    });
+    res.end(JSON.stringify(data));
+  };
+
+  if (!supabaseAuth || !options.supabase) {
+    sendJson(503, {
+      success: false,
+      error: 'Authentication service is unavailable.'
+    });
+    return;
+  }
+
+  if (!options.sessionManager || !options.commandEngine) {
+    sendJson(503, {
+      success: false,
+      error: 'Session service is unavailable.'
+    });
+    return;
+  }
+
+  const authorization = req.headers.authorization || '';
+  const accessToken = authorization.startsWith('Bearer ')
+    ? authorization.slice(7).trim()
+    : '';
+
+  const user = await supabaseAuth.verifyAccessToken(accessToken);
+
+  if (!user) {
+    sendJson(401, {
+      success: false,
+      error: 'Unauthorized'
+    });
+    return;
+  }
+
+  const accountService = createAccountService(options.supabase);
+  const account = await accountService.getAccountForUser(user.id);
+
+  if (!account) {
+    sendJson(404, {
+      success: false,
+      error: 'NexaBot account not found.'
+    });
+    return;
+  }
+
+  const existingSession = options.sessionManager.getSession(account.id);
+
+  if (existingSession) {
+    sendJson(200, {
+      success: true,
+      session: existingSession
+    });
+    return;
+  }
+
+  const session = await options.sessionManager.startSession({
+    accountId: account.id,
+    phoneNumber: account.phoneNumber,
+    commandEngine: options.commandEngine
+  });
+
+  sendJson(202, {
+    success: true,
+    session
+  });
+  return;
+}
             if (req.method === 'POST' && requestPath === '/accounts/register') {
         const sendJson = (status, data) => {
           res.writeHead(status, {
