@@ -88,17 +88,6 @@ function createSessionManager(options = {}) {
           }
         }
       });
-        onAuthFailure: () => {
-          if (!session.stopping) {
-            session.status = 'auth_failed';
-          }
-        },
-
-        onDisconnected: () => {
-          if (!session.stopping) {
-            session.status = 'disconnected';
-          }
-        } 
       const client = await session.startPromise;
       session.client = client;
 
