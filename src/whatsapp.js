@@ -13,6 +13,7 @@ function createWhatsAppClient(options = {}) {
   const clientId = options.clientId || 'nexabot';
 
   const client = new Client({
+    authTimeoutMs: 120000,
     authStrategy: new LocalAuth({
       clientId,
       dataPath: authDir
