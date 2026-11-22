@@ -359,7 +359,7 @@ const server = http.createServer(createRequestHandler({
       console.error('WhatsApp initialization failed:', error.message);
     });
   }
-    return { server, bot };
+    return { server, bot, sessionManager };
 }
 
 if (require.main === module) {
