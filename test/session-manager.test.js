@@ -271,3 +271,38 @@ test('uses an account-specific authentication directory', async () => {
     path.join(path.resolve('.test-auth'), ACCOUNT_A)
   );
 });
+
+test('prevents simultaneous duplicate session startup for the same account', async () => {
+  let finishStartup;
+  const calls = [];
+
+  const manager = createSessionManager({
+    startWhatsApp: async (options) => {
+      calls.push(options);
+
+      return new Promise((resolve) => {
+        finishStartup = () => resolve(createMockClient());
+      });
+    }
+  });
+
+  const firstStart = manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await assert.rejects(
+    manager.startSession({
+      accountId: ACCOUNT_A,
+      commandEngine: { handle: async () => {} }
+    }),
+    { message: 'Session already exists.' }
+  );
+
+  assert.equal(calls.length, 1);
+
+  finishStartup();
+  await firstStart;
+
+  assert.ok(manager.getSession(ACCOUNT_A));
+});
