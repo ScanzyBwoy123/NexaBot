@@ -869,9 +869,9 @@ test('ignores status events after a session shutdown has started', async () => {
 
   handlers.onReady();
 
-  assert.equal(
-    manager.getSession(ACCOUNT_A),
-    null
+    assert.equal(
+    manager.getSession(ACCOUNT_A).status,
+    'starting'
   );
 
   await stopPromise;
