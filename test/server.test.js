@@ -2153,7 +2153,14 @@ test('registration rejects a missing phone number with 400', async () => {
   process.env.ENABLE_PUBLIC_REGISTRATION = 'true';
 
   const handler = createRequestHandler({
-    supabase: {}
+    supabase: {
+  auth: {
+    getUser: async () => ({
+      data: { user: { id: 'test-user-123' } },
+      error: null
+    })
+  }
+}
   });
 
   let statusCode;
