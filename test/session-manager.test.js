@@ -337,3 +337,31 @@ test('waits for WhatsApp startup before stopping a session', async () => {
   assert.equal(client.destroyed, true);
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('cleans up when WhatsApp startup fails during a stop request', async () => {
+  let failStartup;
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => {
+      return new Promise((resolve, reject) => {
+        failStartup = () => reject(new Error('Initialization failed'));
+      });
+    }
+  });
+
+  const startPromise = manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const stopPromise = manager.stopSession(ACCOUNT_A);
+
+  failStartup();
+
+  await assert.rejects(
+    startPromise,
+    { message: 'Initialization failed' }
+  );
+
+  assert.equal(await stopPromise, true);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
