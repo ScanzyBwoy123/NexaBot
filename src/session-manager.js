@@ -52,30 +52,41 @@ function createSessionManager(options = {}) {
         clientId: `nexabot-${accountId}`,
         authDir: path.join(authRootDir, accountId),
 
-        onQR: () => {
-          session.status = 'waiting_for_pairing';
+               onQR: () => {
+          if (!session.stopping) {
+            session.status = 'waiting_for_pairing';
+          }
         },
 
         onCode: () => {
-          session.status = 'waiting_for_pairing';
+          if (!session.stopping) {
+            session.status = 'waiting_for_pairing';
+          }
         },
 
         onAuthenticated: () => {
-          session.status = 'authenticated';
+          if (!session.stopping) {
+            session.status = 'authenticated';
+          }
         },
 
         onReady: () => {
-          session.status = 'connected';
+          if (!session.stopping) {
+            session.status = 'connected';
+          }
         },
 
         onAuthFailure: () => {
-          session.status = 'auth_failed';
+          if (!session.stopping) {
+            session.status = 'auth_failed';
+          }
         },
 
         onDisconnected: () => {
-          session.status = 'disconnected';
-        }
-      });
+          if (!session.stopping) {
+            session.status = 'disconnected';
+          }
+        } 
       const client = await session.startPromise;
       session.client = client;
 
