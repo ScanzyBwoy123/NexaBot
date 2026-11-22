@@ -89,7 +89,10 @@ test('registers a pending account successfully', async () => {
   };
 
   const service = createAccountService(supabase);
-  const result = await service.registerPendingAccount('+233 24 123 4567');
+    const result = await service.registerPendingAccount(
+    '+233 24 123 4567',
+    '11111111-1111-4111-8111-111111111111'
+  );
 
   assert.equal(insertedAccount.phone_e164, '233241234567');
   assert.equal(insertedAccount.account_status, 'pairing_pending');
@@ -112,7 +115,10 @@ test('prevents duplicate account registration', async () => {
     select() {
       return this;
     },
-    single: async () => ({
+      const result = await service.registerPendingAccount(
+    '233241234567',
+    '11111111-1111-4111-8111-111111111111'
+  );
       data: null,
       error: { code: '23505' }
     })
@@ -141,7 +147,10 @@ test('hides database errors from callers', async () => {
     select() {
       return this;
     },
-    single: async () => ({
+        () => service.registerPendingAccount(
+      '233241234567',
+      '11111111-1111-4111-8111-111111111111'
+    ),
       data: null,
       error: { code: 'DATABASE_ERROR', message: 'Private database details' }
     })
