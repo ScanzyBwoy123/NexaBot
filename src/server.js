@@ -515,6 +515,12 @@ const server = http.createServer(createRequestHandler({
   verifyPersistentStorage()
 .then(async storageStatus => {
     console.log(`NexaBot persistent storage marker: ${storageStatus}`);
+    if (supabase) {
+  await verifySupabaseConnection(supabase);
+  console.log('NexaBot Supabase connectivity check passed.');
+} else {
+  throw new Error('Supabase client is not configured.');
+}
     server.listen(config.port, () => {
       console.log(
         `NexaBot server listening on port ${server.address().port}`
