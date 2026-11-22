@@ -640,3 +640,33 @@ test('keeps another account active when one account startup fails', async () => 
   assert.equal(manager.getClient(ACCOUNT_B), secondClient);
   assert.equal(secondClient.destroyed, false);
 });
+test('keeps session status changes isolated between accounts', async () => {
+  const mock = createMockStartWhatsApp();
+
+  const manager = createSessionManager({
+    startWhatsApp: mock.startWhatsApp
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_B,
+    commandEngine: { handle: async () => {} }
+  });
+
+  mock.calls[0].options.onReady();
+
+  assert.equal(manager.getSession(ACCOUNT_A).status, 'connected');
+  assert.equal(manager.getSession(ACCOUNT_B).status, 'starting');
+
+  mock.calls[1].options.onQR('test-qr');
+
+  assert.equal(manager.getSession(ACCOUNT_A).status, 'connected');
+  assert.equal(
+    manager.getSession(ACCOUNT_B).status,
+    'waiting_for_pairing'
+  );
+});
