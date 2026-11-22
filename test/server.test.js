@@ -2616,3 +2616,91 @@ test('session start cannot create a session for another user account', async () 
   assert.equal(accountLookupUserId, 'different-user-1');
   assert.equal(sessionStarted, false);
 });
+test('session start does not create duplicate sessions', async () => {
+  const { Readable } = require('node:stream');
+  let existingSession = null;
+  let startCalls = 0;
+
+  const supabase = {
+    auth: {
+      getUser: async () => ({
+        data: { user: { id: 'authenticated-user-1' } },
+        error: null
+      })
+    },
+    schema: () => ({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: {
+                id: 'account-uuid-1',
+                phone_e164: '233241234567',
+                account_status: 'pairing_pending'
+              },
+              error: null
+            })
+          })
+        })
+      })
+    })
+  };
+
+  const sessionManager = {
+    getSession: () => existingSession,
+    startSession: async options => {
+      startCalls++;
+      existingSession = {
+        accountId: options.accountId,
+        status: 'waiting_for_pairing'
+      };
+      return existingSession;
+    }
+  };
+
+  const handler = createRequestHandler({
+    supabase,
+    sessionManager,
+    commandEngine: {}
+  });
+
+  const sendRequest = async () => {
+    const req = Readable.from(['{}']);
+    req.method = 'POST';
+    req.url = '/session/start';
+    req.headers = {
+      authorization: 'Bearer valid-access-token'
+    };
+
+    let statusCode;
+    let responseBody;
+
+    const res = {
+      headersSent: false,
+      writeHead(status, headers) {
+        statusCode = status;
+        this.headers = headers;
+        this.headersSent = true;
+      },
+      end(body) {
+        responseBody = body;
+      }
+    };
+
+    await handler(req, res);
+
+    return {
+      statusCode,
+      result: JSON.parse(responseBody)
+    };
+  };
+
+  const firstResponse = await sendRequest();
+  const secondResponse = await sendRequest();
+
+  assert.equal(firstResponse.statusCode, 202);
+  assert.equal(secondResponse.statusCode, 200);
+  assert.equal(firstResponse.result.session.accountId, 'account-uuid-1');
+  assert.equal(secondResponse.result.session.accountId, 'account-uuid-1');
+  assert.equal(startCalls, 1);
+});
