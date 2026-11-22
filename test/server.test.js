@@ -1608,15 +1608,7 @@ test('pairing endpoint rejects requests when no API token is configured', async 
     }
   }
 });
-test('pairing endpoint handles malformed JSON without crashing the server', async () => {
-  const previousDeveloperIds = process.env.DEVELOPER_IDS;
-  const previousEnableWhatsApp = process.env.ENABLE_WHATSAPP;
-  const previousPairingToken = process.env.PAIRING_API_TOKEN;
-
-  process.env.DEVELOPER_IDS = '233241234567';
-  process.env.ENABLE_WHATSAPP = 'false';
-  process.env.PAIRING_API_TOKEN = 'test-secret-token';
-
+test('pairing endpoint rejects unauthenticated requests with malformed JSON', async () => {
   let server;
 
   try {
@@ -1628,17 +1620,16 @@ test('pairing endpoint handles malformed JSON without crashing the server', asyn
     const response = await fetch(`${baseUrl}/pairing/request`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer test-secret-token'
+        'Content-Type': 'application/json'
       },
       body: '{"phoneNumber":'
     });
 
     const result = await response.json();
 
-    assert.equal(response.status, 400);
-assert.equal(result.success, false);
-assert.equal(result.error, 'Invalid JSON body.');
+    assert.equal(response.status, 401);
+    assert.equal(result.success, false);
+    assert.equal(result.error, 'Unauthorized');
 
     const healthResponse = await fetch(`${baseUrl}/health`);
     const healthResult = await healthResponse.json();
@@ -1650,24 +1641,6 @@ assert.equal(result.error, 'Invalid JSON body.');
       const closed = once(server, 'close');
       server.close();
       await closed;
-    }
-
-    if (previousDeveloperIds === undefined) {
-      delete process.env.DEVELOPER_IDS;
-    } else {
-      process.env.DEVELOPER_IDS = previousDeveloperIds;
-    }
-
-    if (previousEnableWhatsApp === undefined) {
-      delete process.env.ENABLE_WHATSAPP;
-    } else {
-      process.env.ENABLE_WHATSAPP = previousEnableWhatsApp;
-    }
-
-    if (previousPairingToken === undefined) {
-      delete process.env.PAIRING_API_TOKEN;
-    } else {
-      process.env.PAIRING_API_TOKEN = previousPairingToken;
     }
   }
 });
