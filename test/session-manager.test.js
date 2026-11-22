@@ -458,3 +458,31 @@ test('does not destroy a client twice when stopping the same session', async () 
   assert.equal(destroyCount, 1);
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('handles simultaneous shutdown requests without destroying the client twice', async () => {
+  let destroyCount = 0;
+
+  const client = {
+    async destroy() {
+      destroyCount++;
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  };
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => client
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const results = await Promise.all([
+    manager.stopSession(ACCOUNT_A),
+    manager.stopSession(ACCOUNT_A)
+  ]);
+
+  assert.deepEqual(results, [true, true]);
+  assert.equal(destroyCount, 1);
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
