@@ -486,3 +486,37 @@ test('handles simultaneous shutdown requests without destroying the client twice
   assert.equal(destroyCount, 1);
   assert.equal(manager.getSession(ACCOUNT_A), null);
 });
+test('shares shutdown failures across simultaneous stop requests', async () => {
+  let destroyCount = 0;
+
+  const client = {
+    async destroy() {
+      destroyCount++;
+      await new Promise((resolve) => setImmediate(resolve));
+      throw new Error('Shutdown failed');
+    }
+  };
+
+  const manager = createSessionManager({
+    startWhatsApp: async () => client
+  });
+
+  await manager.startSession({
+    accountId: ACCOUNT_A,
+    commandEngine: { handle: async () => {} }
+  });
+
+  const results = await Promise.allSettled([
+    manager.stopSession(ACCOUNT_A),
+    manager.stopSession(ACCOUNT_A)
+  ]);
+
+  assert.equal(destroyCount, 1);
+  assert.deepEqual(
+    results.map((result) => result.status),
+    ['rejected', 'rejected']
+  );
+  assert.equal(results[0].reason.message, 'Shutdown failed');
+  assert.equal(results[1].reason.message, 'Shutdown failed');
+  assert.equal(manager.getSession(ACCOUNT_A), null);
+});
