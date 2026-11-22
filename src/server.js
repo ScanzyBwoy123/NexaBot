@@ -116,7 +116,28 @@ function createRequestHandler(options = {}) {
           });
           return;
         }
+                if (!supabaseAuth) {
+          sendJson(503, {
+            success: false,
+            error: 'Authentication service is unavailable.'
+          });
+          return;
+        }
 
+        const authorization = req.headers.authorization || '';
+        const accessToken = authorization.startsWith('Bearer ')
+          ? authorization.slice(7).trim()
+          : '';
+
+        const user = await supabaseAuth.verifyAccessToken(accessToken);
+
+        if (!user) {
+          sendJson(401, {
+            success: false,
+            error: 'Unauthorized'
+          });
+          return;
+        }
         const body = await readJsonBody(req);
         const accountService = createAccountService(options.supabase);
 
