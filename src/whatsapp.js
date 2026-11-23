@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('node:path');
+const fs = require('node:fs');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const puppeteer = require('puppeteer');
 const { execFileSync } = require('node:child_process');
@@ -28,7 +29,22 @@ function createWhatsAppClient(options = {}) {
   );
 
   const clientId = options.clientId || 'nexabot';
+const profileDir = path.join(authDir, `session-${clientId}`);
 
+const lockFiles = [
+  'SingletonLock',
+  'SingletonSocket',
+  'SingletonCookie'
+];
+
+console.log('[Diagnostics] WhatsApp profile directory:', profileDir);
+
+for (const file of lockFiles) {
+  console.log(
+    `[Diagnostics] ${file}:`,
+    fs.existsSync(path.join(profileDir, file)) ? 'EXISTS' : 'NOT FOUND'
+  );
+}
   const client = new Client({
     authTimeoutMs: 120000,
     authStrategy: new LocalAuth({
