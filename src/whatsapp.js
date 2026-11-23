@@ -305,6 +305,10 @@ async function startWhatsApp(options = {}) {
     await client.initialize();
     console.log('[WhatsApp] client.initialize() completed');
   } catch (error) {
+    console.log('[Diagnostics] Profile directory exists:', fs.existsSync(profileDir));
+console.log('[Diagnostics] Profile directory contents:',
+  fs.existsSync(profileDir) ? fs.readdirSync(profileDir) : 'Directory missing'
+);
     console.error('[WhatsApp] client.initialize() failed:', {
       errorType: typeof error,
       errorValue: error,
