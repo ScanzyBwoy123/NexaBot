@@ -244,9 +244,18 @@ async function startWhatsApp(options = {}) {
   registerWhatsAppEvents(client, options);
   registerMessageHandler(client, commandEngine, options);
 
-    try {
+      console.log('[WhatsApp] Starting client.initialize()');
+
+  try {
     await client.initialize();
+    console.log('[WhatsApp] client.initialize() completed');
   } catch (error) {
+    console.error('[WhatsApp] client.initialize() failed:', {
+      errorType: typeof error,
+      errorValue: error,
+      errorMessage: error?.message,
+      errorStack: error?.stack
+    });
     try {
       if (typeof client.destroy === 'function') {
         await client.destroy();
