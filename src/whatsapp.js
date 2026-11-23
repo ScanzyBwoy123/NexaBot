@@ -23,9 +23,12 @@ function createWhatsAppClient(options = {}) {
   headless: true,
     dumpio: true,
       args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox'
-      ]
+  '--headless=new',
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-gpu'
+]
     }
   });
 
