@@ -244,7 +244,17 @@ async function startWhatsApp(options = {}) {
 
   registerWhatsAppEvents(client, options);
   registerMessageHandler(client, commandEngine, options);
+  client.on('remote_session_saved', () => {
+    console.log('[WhatsApp] Remote session saved');
+  });
 
+  client.on('loading_screen', (percent, message) => {
+    console.log('[WhatsApp] Page loading:', percent, message);
+  });
+
+  client.on('error', error => {
+    console.error('[WhatsApp] Client error:', error);
+  });
       console.log('[WhatsApp] Starting client.initialize()');
 
   try {
