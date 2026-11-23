@@ -1,7 +1,7 @@
 FROM node:20-bookworm-slim
 
 ENV NODE_ENV=production
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/lib/chromium/chromium
 ENV NEXABOT_AUTH_DIR=/data/.nexabot-auth
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
