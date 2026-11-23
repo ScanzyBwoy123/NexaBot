@@ -32,6 +32,16 @@ function createWhatsAppClient(options = {}) {
 }
 
 function registerWhatsAppEvents(client, handlers = {}) {
+   client.on('loading_screen', (percent, message) => {
+    console.log('[WhatsApp] Loading screen:', {
+      percent,
+      message
+    });
+  });
+
+  client.on('change_state', state => {
+    console.log('[WhatsApp] Connection state changed:', state);
+  }); 
   client.on('qr', qr => {
     handlers.onQR?.(qr);
   });
