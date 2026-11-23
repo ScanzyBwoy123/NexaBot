@@ -11,18 +11,29 @@ try {
     .filter(name => /^\d+$/.test(name))
     .map(pid => {
       try {
-        return fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8')
+        const stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8');
+        const rest = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+        const command = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8')
           .replace(/\0/g, ' ')
           .trim();
+
+        if (!/chromium|chrome/i.test(command)) return null;
+
+        return {
+          pid,
+          ppid: rest[1],
+          state: rest[0],
+          command: command.slice(0, 500)
+        };
       } catch {
-        return '';
+        return null;
       }
     })
-    .filter(command => /chromium|chrome/i.test(command));
+    .filter(Boolean);
 
-  console.log('[Diagnostics] Chromium processes:', processes);
+  console.log('[Diagnostics] Chromium process information:', JSON.stringify(processes));
 } catch (error) {
-  console.log('[Diagnostics] Process check failed:', error.message);
+  console.log('[Diagnostics] Process inspection failed:', error.message);
 }
 try {
   console.log(
