@@ -27,7 +27,9 @@ function createWhatsAppClient(options = {}) {
     process.env.NEXABOT_AUTH_DIR ||
     '.nexabot-auth'
   );
-
+console.log('[Diagnostics] Auth directory:', authDir);
+console.log('[Diagnostics] Client ID:', clientId);
+console.log('[Diagnostics] Expected Chromium profile:', path.join(authDir, `session-${clientId}`));
   const clientId = options.clientId || 'nexabot';
 const profileDir = path.join(authDir, `session-${clientId}`);
 
