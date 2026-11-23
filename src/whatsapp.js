@@ -332,6 +332,25 @@ const profileDir = path.join(authDir, `session-${clientId}`);
 console.log('[Diagnostics] Profile directory contents:',
   fs.existsSync(profileDir) ? fs.readdirSync(profileDir) : 'Directory missing'
 );
+
+try {
+  const processes = fs.readdirSync('/proc')
+    .filter(name => /^\d+$/.test(name))
+    .map(pid => {
+      try {
+        return fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8')
+          .replace(/\0/g, ' ')
+          .trim();
+      } catch {
+        return '';
+      }
+    })
+    .filter(command => /chromium|chrome/i.test(command));
+
+  console.log('[Diagnostics] Chromium processes after failure:', processes);
+} catch (processError) {
+  console.log('[Diagnostics] Process check failed:', processError.message);
+}
     console.error('[WhatsApp] client.initialize() failed:', {
       errorType: typeof error,
       errorValue: error,
