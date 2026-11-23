@@ -5,16 +5,13 @@ const fs = require('node:fs');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const puppeteer = require('puppeteer');
 const { execFileSync, execSync } = require('node:child_process');
-try {
-  console.log(
-   const { readdirSync, readFileSync } = require('node:fs');
 
 try {
-  const processes = readdirSync('/proc')
+  const processes = fs.readdirSync('/proc')
     .filter(name => /^\d+$/.test(name))
     .map(pid => {
       try {
-        return readFileSync(`/proc/${pid}/cmdline`, 'utf8')
+        return fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8')
           .replace(/\0/g, ' ')
           .trim();
       } catch {
