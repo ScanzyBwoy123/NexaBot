@@ -1,3 +1,4 @@
+
 'use strict';
 
 const path = require('node:path');
@@ -6,35 +7,9 @@ const { Client, LocalAuth } = require('whatsapp-web.js');
 const puppeteer = require('puppeteer');
 const { execFileSync, execSync } = require('node:child_process');
 
-try {
-  const processes = fs.readdirSync('/proc')
-    .filter(name => /^\d+$/.test(name))
-    .map(pid => {
-      try {
-        const stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8');
-        const rest = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
-        const command = fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8')
-          .replace(/\0/g, ' ')
-          .trim();
+const { createIdentityResolver } = require('./core/identityResolver');
 
-        if (!/chromium|chrome/i.test(command)) return null;
-
-        return {
-          pid,
-          ppid: rest[1],
-          state: rest[0],
-          command: command.slice(0, 500)
-        };
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-
-  console.log('[Diagnostics] Chromium process information:', JSON.stringify(processes));
-} catch (error) {
-  console.log('[Diagnostics] Process inspection failed:', error.message);
-}
+// Check the installed Chromium version.
 try {
   console.log(
     '[Diagnostics] Chromium version:',
@@ -45,58 +20,112 @@ try {
     ).trim()
   );
 } catch (error) {
-  console.error('[Diagnostics] Chromium version check failed:', error.message);
+  console.error(
+    '[Diagnostics] Chromium version check failed:',
+    error.message
+  );
 }
-const { createIdentityResolver } = require('./core/identityResolver');
+
+// Inspect Chromium processes. Called after initialization fails.
+function inspectChromiumProcesses() {
+  try {
+    const processes = fs.readdirSync('/proc')
+      .filter(name => /^\d+$/.test(name))
+      .map(pid => {
+        try {
+          const stat = fs.readFileSync(`/proc/${pid}/stat`, 'utf8');
+          const rest = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+
+          const command = fs.readFileSync(
+            `/proc/${pid}/cmdline`,
+            'utf8'
+          )
+            .replace(/\0/g, ' ')
+            .trim();
+
+          if (!/chromium|chrome/i.test(command)) {
+            return null;
+          }
+
+          return {
+            pid,
+            ppid: rest[1],
+            state: rest[0],
+            command: command.slice(0, 500)
+          };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
+    console.log(
+      '[Diagnostics] Chromium process information:',
+      JSON.stringify(processes)
+    );
+  } catch (error) {
+    console.log(
+      '[Diagnostics] Process inspection failed:',
+      error.message
+    );
+  }
+}
+
 function createWhatsAppClient(options = {}) {
   const authDir = path.resolve(
     options.authDir ||
     process.env.NEXABOT_AUTH_DIR ||
     '.nexabot-auth'
   );
-const clientId = options.clientId || 'nexabot';
 
-const profileDir = path.join(authDir, `session-${clientId}`);
+  const clientId = options.clientId || 'nexabot';
 
-const lockFiles = [
-  'SingletonLock',
-  'SingletonSocket',
-  'SingletonCookie'
-];
-
-console.log('[Diagnostics] Auth directory:', authDir);
-console.log('[Diagnostics] Client ID:', clientId);
-console.log('[Diagnostics] Expected Chromium profile:', profileDir);
-
-for (const file of lockFiles) {
-  console.log(
-    `[Diagnostics] ${file}:`,
-    fs.existsSync(path.join(profileDir, file)) ? 'EXISTS' : 'NOT FOUND'
+  const profileDir = path.join(
+    authDir,
+    `session-${clientId}`
   );
-}
-for (const file of lockFiles) {
-  console.log(
-    `[Diagnostics] ${file}:`,
-    fs.existsSync(path.join(profileDir, file)) ? 'EXISTS' : 'NOT FOUND'
-  );
-}
+
+  const lockFiles = [
+    'SingletonLock',
+    'SingletonSocket',
+    'SingletonCookie'
+  ];
+
+  console.log('[Diagnostics] Auth directory:', authDir);
+  console.log('[Diagnostics] Client ID:', clientId);
+  console.log('[Diagnostics] Expected Chromium profile:', profileDir);
+
+  for (const file of lockFiles) {
+    console.log(
+      `[Diagnostics] ${file}:`,
+      fs.existsSync(path.join(profileDir, file))
+        ? 'EXISTS'
+        : 'NOT FOUND'
+    );
+  }
+
   const client = new Client({
     authTimeoutMs: 120000,
+
     authStrategy: new LocalAuth({
       clientId,
       dataPath: authDir
     }),
+
     puppeteer: {
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-  headless: true,
-    dumpio: true,
+      executablePath:
+        process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+
+      headless: true,
+      dumpio: true,
+
       args: [
-  '--headless=new',
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
-  '--disable-dev-shm-usage',
-  '--disable-gpu'
-]
+        '--headless=new',
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu'
+      ]
     }
   });
 
@@ -104,7 +133,7 @@ for (const file of lockFiles) {
 }
 
 function registerWhatsAppEvents(client, handlers = {}) {
-   client.on('loading_screen', (percent, message) => {
+  client.on('loading_screen', (percent, message) => {
     console.log('[WhatsApp] Loading screen:', {
       percent,
       message
@@ -113,13 +142,16 @@ function registerWhatsAppEvents(client, handlers = {}) {
 
   client.on('change_state', state => {
     console.log('[WhatsApp] Connection state changed:', state);
-  }); 
+  });
+
   client.on('qr', qr => {
     handlers.onQR?.(qr);
   });
+
   client.on('code', code => {
     handlers.onCode?.(code);
   });
+
   client.on('authenticated', () => {
     handlers.onAuthenticated?.();
   });
@@ -138,6 +170,7 @@ function registerWhatsAppEvents(client, handlers = {}) {
 
   return client;
 }
+
 function registerMessageHandler(client, commandEngine, handlers = {}) {
   if (!client || typeof client.on !== 'function') {
     throw new Error('Invalid WhatsApp client.');
@@ -230,7 +263,8 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
         }
       }
 
-      const access = commandEngine.authorizer?.authorize(commandSenderId);
+      const access =
+        commandEngine.authorizer?.authorize(commandSenderId);
 
       if (!access || !access.allowed) {
         return;
@@ -242,13 +276,15 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
         originalSenderId: senderId,
         chatId,
         message,
+
         reply: async response => {
           pendingReplyCount++;
 
           try {
             const sentMessage = await message.reply(response);
 
-            const sentMessageId = sentMessage?.id?._serialized;
+            const sentMessageId =
+              sentMessage?.id?._serialized;
 
             if (sentMessageId) {
               rememberSuppressedMessage(sentMessageId);
@@ -259,7 +295,8 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
             pendingReplyCount--;
 
             if (pendingReplyCount === 0) {
-              const buffered = bufferedOutgoingMessages.splice(0);
+              const buffered =
+                bufferedOutgoingMessages.splice(0);
 
               for (const outgoingMessage of buffered) {
                 if (!isSuppressedMessage(outgoingMessage)) {
@@ -304,6 +341,7 @@ function registerMessageHandler(client, commandEngine, handlers = {}) {
 
   return client;
 }
+
 async function startWhatsApp(options = {}) {
   const commandEngine = options.commandEngine;
 
@@ -312,16 +350,23 @@ async function startWhatsApp(options = {}) {
   }
 
   const client = createWhatsAppClient(options);
-const authDir = path.resolve(
-  options.authDir ||
-  process.env.NEXABOT_AUTH_DIR ||
-  '.nexabot-auth'
-);
-const clientId = options.clientId || 'nexabot';
-const profileDir = path.join(authDir, `session-${clientId}`);
+
+  const authDir = path.resolve(
+    options.authDir ||
+    process.env.NEXABOT_AUTH_DIR ||
+    '.nexabot-auth'
+  );
+
+  const clientId = options.clientId || 'nexabot';
+
+  const profileDir = path.join(
+    authDir,
+    `session-${clientId}`
+  );
 
   registerWhatsAppEvents(client, options);
   registerMessageHandler(client, commandEngine, options);
+
   client.on('remote_session_saved', () => {
     console.log('[WhatsApp] Remote session saved');
   });
@@ -333,52 +378,42 @@ const profileDir = path.join(authDir, `session-${clientId}`);
   client.on('error', error => {
     console.error('[WhatsApp] Client error:', error);
   });
-      console.log('[WhatsApp] Starting client.initialize()');
+
+  console.log('[WhatsApp] Starting client.initialize()');
 
   try {
     await client.initialize();
+
     console.log('[WhatsApp] client.initialize() completed');
   } catch (error) {
-    console.log('[Diagnostics] Profile directory exists:', fs.existsSync(profileDir));
-console.log('[Diagnostics] Profile directory contents:',
-  fs.existsSync(profileDir) ? fs.readdirSync(profileDir) : 'Directory missing'
-);
+    console.log(
+      '[Diagnostics] Profile directory exists:',
+      fs.existsSync(profileDir)
+    );
 
-try {
-  const processes = fs.readdirSync('/proc')
-    .filter(name => /^\d+$/.test(name))
-    .map(pid => {
-      try {
-        return fs.readFileSync(`/proc/${pid}/cmdline`, 'utf8')
-          .replace(/\0/g, ' ')
-          .trim();
-      } catch {
-        return '';
-      }
-    })
-    .filter(command => /chromium|chrome/i.test(command));
+    console.log(
+      '[Diagnostics] Profile directory contents:',
+      fs.existsSync(profileDir)
+        ? fs.readdirSync(profileDir)
+        : 'Directory missing'
+    );
 
-  console.log(
-  '[Diagnostics] Chromium process count:',
-  processes.length,
-  'Details:',
-  JSON.stringify(processes).slice(0, 3000)
-);
-} catch (processError) {
-  console.log('[Diagnostics] Process check failed:', processError.message);
-}
+    // Inspect Chromium after initialization failure.
+    inspectChromiumProcesses();
+
     console.error('[WhatsApp] client.initialize() failed:', {
       errorType: typeof error,
       errorValue: error,
       errorMessage: error?.message,
       errorStack: error?.stack
     });
+
     try {
       if (typeof client.destroy === 'function') {
         await Promise.race([
-  client.destroy(),
-  new Promise(resolve => setTimeout(resolve, 10000))
-]);
+          client.destroy(),
+          new Promise(resolve => setTimeout(resolve, 10000))
+        ]);
       }
     } catch (cleanupError) {
       if (typeof options.onCleanupError === 'function') {
@@ -403,12 +438,14 @@ try {
 
   return client;
 }
+
 async function requestPairingCode(client, phoneNumber) {
   if (!client || typeof client.requestPairingCode !== 'function') {
     throw new Error('WhatsApp client is not ready.');
   }
 
-  const normalizedNumber = String(phoneNumber || '').replace(/\D/g, '');
+  const normalizedNumber = String(phoneNumber || '')
+    .replace(/\D/g, '');
 
   if (!/^[1-9]\d{7,14}$/.test(normalizedNumber)) {
     throw new Error('Invalid international phone number.');
@@ -416,6 +453,7 @@ async function requestPairingCode(client, phoneNumber) {
 
   return client.requestPairingCode(normalizedNumber, true);
 }
+
 module.exports = {
   createWhatsAppClient,
   registerWhatsAppEvents,
