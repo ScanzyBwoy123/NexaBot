@@ -5,7 +5,16 @@ const fs = require('node:fs');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const puppeteer = require('puppeteer');
 const { execFileSync, execSync } = require('node:child_process');
-
+try {
+  console.log(
+    '[Diagnostics] Chromium processes:',
+    execSync('ps -eo pid,ppid,args | grep -E "[c]hromium|[c]hrome"', {
+      encoding: 'utf8'
+    })
+  );
+} catch (error) {
+  console.log('[Diagnostics] Process check:', error.message);
+}
 console.log('[Diagnostics] Puppeteer version:', require('puppeteer/package.json').version);
 
 try {
