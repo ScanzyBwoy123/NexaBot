@@ -347,7 +347,12 @@ try {
     })
     .filter(command => /chromium|chrome/i.test(command));
 
-  console.log('[Diagnostics] Chromium processes after failure:', processes);
+  console.log(
+  '[Diagnostics] Chromium process count:',
+  processes.length,
+  'Details:',
+  JSON.stringify(processes).slice(0, 3000)
+);
 } catch (processError) {
   console.log('[Diagnostics] Process check failed:', processError.message);
 }
