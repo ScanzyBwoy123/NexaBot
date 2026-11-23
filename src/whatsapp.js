@@ -2,6 +2,23 @@
 
 const path = require('node:path');
 const { Client, LocalAuth } = require('whatsapp-web.js');
+const puppeteer = require('puppeteer');
+const { execFileSync } = require('node:child_process');
+
+console.log('[Diagnostics] Puppeteer version:', require('puppeteer/package.json').version);
+
+try {
+  console.log(
+    '[Diagnostics] Chromium version:',
+    execFileSync(
+      process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/lib/chromium/chromium',
+      ['--version'],
+      { encoding: 'utf8' }
+    ).trim()
+  );
+} catch (error) {
+  console.error('[Diagnostics] Chromium version check failed:', error.message);
+}
 const { createIdentityResolver } = require('./core/identityResolver');
 function createWhatsAppClient(options = {}) {
   const authDir = path.resolve(
