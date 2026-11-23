@@ -4,7 +4,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const puppeteer = require('puppeteer');
-const { execFileSync } = require('node:child_process');
+const { execFileSync, execSync } = require('node:child_process');
 
 console.log('[Diagnostics] Puppeteer version:', require('puppeteer/package.json').version);
 
