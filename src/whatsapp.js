@@ -7,16 +7,26 @@ const puppeteer = require('puppeteer');
 const { execFileSync, execSync } = require('node:child_process');
 try {
   console.log(
-    '[Diagnostics] Chromium processes:',
-    execSync('ps -eo pid,ppid,args | grep -E "[c]hromium|[c]hrome"', {
-      encoding: 'utf8'
-    })
-  );
-} catch (error) {
-  console.log('[Diagnostics] Process check:', error.message);
-}
-console.log('[Diagnostics] Puppeteer version:', require('puppeteer/package.json').version);
+   const { readdirSync, readFileSync } = require('node:fs');
 
+try {
+  const processes = readdirSync('/proc')
+    .filter(name => /^\d+$/.test(name))
+    .map(pid => {
+      try {
+        return readFileSync(`/proc/${pid}/cmdline`, 'utf8')
+          .replace(/\0/g, ' ')
+          .trim();
+      } catch {
+        return '';
+      }
+    })
+    .filter(command => /chromium|chrome/i.test(command));
+
+  console.log('[Diagnostics] Chromium processes:', processes);
+} catch (error) {
+  console.log('[Diagnostics] Process check failed:', error.message);
+}
 try {
   console.log(
     '[Diagnostics] Chromium version:',
