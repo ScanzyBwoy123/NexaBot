@@ -289,7 +289,10 @@ async function startWhatsApp(options = {}) {
     });
     try {
       if (typeof client.destroy === 'function') {
-        await client.destroy();
+        await Promise.race([
+  client.destroy(),
+  new Promise(resolve => setTimeout(resolve, 10000))
+]);
       }
     } catch (cleanupError) {
       if (typeof options.onCleanupError === 'function') {
