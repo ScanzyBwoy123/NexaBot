@@ -285,6 +285,13 @@ async function startWhatsApp(options = {}) {
   }
 
   const client = createWhatsAppClient(options);
+const authDir = path.resolve(
+  options.authDir ||
+  process.env.NEXABOT_AUTH_DIR ||
+  '.nexabot-auth'
+);
+const clientId = options.clientId || 'nexabot';
+const profileDir = path.join(authDir, `session-${clientId}`);
 
   registerWhatsAppEvents(client, options);
   registerMessageHandler(client, commandEngine, options);
